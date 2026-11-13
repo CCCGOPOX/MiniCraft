@@ -1,17 +1,26 @@
 # MiniCraft
 
-3D-игра про блоки на чистом Java (только стандартный JDK). Версия 1.7.0.
+3d game survival like minecraft!
 
-Сайт: https://cccgopox.github.io/MiniCraft/
+download: https://cccgopox.github.io/MiniCraft/
 
 ## Запуск
-Нужна Java 8 или новее.
+you should have java 8+
 
-    java -jar MiniCraft.jar
+---------------------------------------
 
-Сборка из исходника:
 
-    javac --release 8 -encoding UTF-8 MiniCraft.java
-    java MiniCraft
+How to play with friends - you should download RadminVPN and connect with your friend, after that, you should create new game and in pause, you can see IP - you should say it to ur friend and done!
 
-Игра по сети: порт 25570 (TCP), у всех должна быть одна версия.
+
+
+
+
+
+
+
+
+
+
+
+(im russian and my english is not good)
