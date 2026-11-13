@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- layout: левая колонка с названием и кнопкой, справа блоки-карточки; пиксельный заголовок, спокойный текст -->
+<title>MiniCraft</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#f3f1ec;--fg:#1d2318;--muted:#5b6552;--card:#ffffff;--line:#d9d6cc;--grass:#4e9a2f;--grass-d:#2f6a1a;--dirt:#7a5232;--sky:#7fb8e8;--code:#1d2318;--code-fg:#e8f0dc;
+--pix:"Press Start 2P",ui-monospace,monospace;--txt:Inter,system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14180f;--fg:#e9eddf;--muted:#a3ad98;--card:#1d2317;--line:#2f3727;--grass:#6cc144;--grass-d:#3f8a25;--dirt:#a07245;--sky:#2c4a66;--code:#0c0f09;--code-fg:#dbe6cc;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14180f;--fg:#e9eddf;--muted:#a3ad98;--card:#1d2317;--line:#2f3727;--grass:#6cc144;--grass-d:#3f8a25;--dirt:#a07245;--sky:#2c4a66;--code:#0c0f09;--code-fg:#dbe6cc;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--txt);padding-block:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1000px;margin:0 auto}
+header.hero{padding-block:48px 28px;display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:center}
+h1{font:400 clamp(28px,6vw,52px)/1.15 var(--pix);margin:0 0 16px;text-wrap:balance;letter-spacing:-.02em}
+h1 span{color:var(--grass)}
+.lead{font-size:18px;color:var(--muted);max-width:52ch;margin:0 0 24px}
+.btns{display:flex;flex-wrap:wrap;gap:12px}
+.btn{font:600 15px var(--txt);padding:14px 22px;border:0;cursor:pointer;color:#fff;background:var(--grass-d);text-decoration:none;display:inline-block;box-shadow:inset -3px -3px 0 rgba(0,0,0,.28),inset 3px 3px 0 rgba(255,255,255,.22)}
+.btn:hover{background:var(--grass)}
+.btn.alt{background:var(--dirt)}
+.btn:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
+.meta{margin-top:14px;font-size:13px;color:var(--muted)}
+.scene{aspect-ratio:4/3;max-width:100%;border:3px solid var(--line);background:linear-gradient(var(--sky),var(--sky))}
+.scene canvas{width:100%;height:100%;display:block;image-rendering:pixelated}
+section{padding-block:28px}
+h2{font:400 18px/1.4 var(--pix);margin:0 0 18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);padding:16px 18px;min-width:0}
+.card h3{margin:0 0 6px;font:600 16px var(--txt)}
+.card p{margin:0;color:var(--muted);font-size:14.5px}
+pre{background:var(--code);color:var(--code-fg);padding:16px;overflow-x:auto;font:13.5px/1.6 ui-monospace,Consolas,monospace;margin:10px 0}
+ol{padding-left:22px;margin:0}
+li{margin-bottom:8px}
+table{border-collapse:collapse;width:100%}
+.tw{overflow-x:auto}
+td,th{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);font-size:14.5px}
+th{color:var(--muted);font-weight:500}
+kbd{background:var(--card);border:1px solid var(--line);padding:1px 7px;font:13px ui-monospace,monospace}
+footer{padding-block:32px 48px;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
+#srcbox{width:100%;height:120px;font:12px monospace;background:var(--code);color:var(--code-fg);border:1px solid var(--line);display:none}
+@media (max-width:760px){header.hero{grid-template-columns:1fr;padding-block:32px 16px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+<div>
+<h1>Mini<span>Craft</span></h1>
+<p class="lead">3D-игра про блоки на чистом Java: добывайте ресурсы, стройте, летите в Нижний мир и играйте с друзьями по сети. Один файл, никаких библиотек.</p>
+<div class="btns"><a class="btn" href="MiniCraft.jar" download>Скачать MiniCraft.jar</a><a class="btn alt" href="MiniCraft.java" download>Исходный код (.java)</a></div>
+<div class="meta">Версия 1.7.0 · нужна Java 8 или новее · Windows, macOS, Linux</div>
+</div>
+<div class="scene"><canvas id="cv" width="160" height="120" aria-label="Пиксельный пейзаж из блоков"></canvas></div>
+</header>
+
+<section>
+<h2>Что внутри</h2>
+<div class="grid">
+<div class="card"><h3>Выживание и творчество</h3><p>Голод, сердца, крафт, печки, сундуки, ферма, кровать и смена дня и ночи.</p></div>
+<div class="card"><h3>Нижний мир</h3><p>Портал из обсидиана и огниво. Магма, адский камень и светокамень на потолке.</p></div>
+<div class="card"><h3>Игра по сети</h3><p>Один открывает мир, друзья заходят по IP. Вещи друга сохраняются после выхода.</p></div>
+<div class="card"><h3>Строительство</h3><p>Бетон, терракота, кварц, паркет, двери, люки, стекло, лампы и ещё 20 декоративных блоков.</p></div>
+<div class="card"><h3>Бой</h3><p>Мечи, броня, критические удары в прыжке, PvP между игроками и TNT с цепной реакцией.</p></div>
+<div class="card"><h3>Скины и достижения</h3><p>Свой скин из PNG, аккаунты с ником, 11 достижений и мини-карта.</p></div>
+</div>
+</section>
+
+<section>
+<h2>Как запустить</h2>
+<ol>
+<li>Установите Java (JDK или JRE версии 8 и выше).</li>
+<li>Скачайте игру: нажмите «Скачать MiniCraft.jar» наверху страницы.</li>
+<li>Запустите двойным щелчком по <b>MiniCraft.jar</b> или командой:</li>
+</ol>
+<pre>java -jar MiniCraft.jar</pre>
+<p style="color:var(--muted);font-size:14.5px;margin:0">Если у вас только файл <b>MiniCraft.java</b>, соберите его так:</p>
+<pre>javac --release 8 -encoding UTF-8 MiniCraft.java
+java MiniCraft</pre>
+</section>
+
+<section>
+<h2>Игра с друзьями</h2>
+<p style="margin:0 0 8px">В меню выберите «Сетевая игра» и откройте свой мир. Друзья вводят ваш IP-адрес. Порт <b>25570</b> (TCP), для игры через интернет его нужно пробросить на роутере. У всех должна быть одна и та же версия игры.</p>
+</section>
+
+<section>
+<h2>Управление</h2>
+<div class="tw"><table>
+<tr><th>Клавиша</th><th>Действие</th></tr>
+<tr><td><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></td><td>Ходьба, Shift — бег</td></tr>
+<tr><td><kbd>Пробел</kbd></td><td>Прыжок, плавание</td></tr>
+<tr><td>ЛКМ / ПКМ</td><td>Ломать и бить / ставить, открывать, есть</td></tr>
+<tr><td><kbd>E</kbd></td><td>Инвентарь и крафт</td></tr>
+<tr><td><kbd>1</kbd>–<kbd>9</kbd></td><td>Ячейки панели</td></tr>
+<tr><td><kbd>Q</kbd></td><td>Выбросить предмет</td></tr>
+<tr><td><kbd>J</kbd></td><td>Достижения</td></tr>
+<tr><td><kbd>M</kbd></td><td>Мини-карта</td></tr>
+<tr><td><kbd>F11</kbd> / <kbd>F2</kbd></td><td>Полный экран / скриншот</td></tr>
+</table></div>
+</section>
+<footer>MiniCraft — независимая игра, написанная на Java с использованием только стандартного JDK. Не связана с Mojang и Microsoft.</footer>
+</div>
+
+<script>
+(function(){
+var c=document.getElementById('cv'),x=c.getContext('2d');
+var W=160,H=120,B=8,cols=[0x5f,0xa8,0x3c];
+function rnd(i,j){var h=(i*374761393+j*668265263)^0x5bd1e995;h=(h^(h>>>13))*1274126177;return ((h^(h>>>16))>>>0)/4294967295}
+var sky=x.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#5d9ee0');sky.addColorStop(1,'#bcdcf5');x.fillStyle=sky;x.fillRect(0,0,W,H);
+x.fillStyle='#fff8d0';x.fillRect(120,12,12,12);
+x.fillStyle='rgba(255,255,255,.85)';[[20,18,28],[70,30,22]].forEach(function(q){x.fillRect(q[0],q[1],q[2],6);x.fillRect(q[0]+6,q[1]-4,q[2]-12,4)});
+for(var i=0;i<W/B;i++){var h=6+Math.round(2*Math.sin(i*.7)+rnd(i,1)*2);
+ for(var j=h;j<H/B;j++){var d=j-h,col=d==0?(rnd(i,j)>.5?'#5fa83c':'#56993a'):d<3?(rnd(i,j)>.5?'#8b5e3c':'#7d5334'):(rnd(i,j)>.6?'#7a7a7a':'#6e6e6e');
+  if(d>=3&&rnd(i+9,j)>.93)col='#2b2b2b';x.fillStyle=col;x.fillRect(i*B,j*B,B,B);x.fillStyle='rgba(0,0,0,.12)';x.fillRect(i*B,j*B+B-1,B,1);x.fillRect(i*B+B-1,j*B,1,B)}}
+var tx=9,th=6+Math.round(2*Math.sin(tx*.7)+rnd(tx,1)*2);
+for(var t=1;t<=4;t++){x.fillStyle='#6b4a2a';x.fillRect(tx*B,(th-t)*B,B,B)}
+x.fillStyle='#3f8a2a';for(var a=-2;a<=2;a++)for(var b=0;b<3;b++){if(Math.abs(a)==2&&b==0)continue;x.fillRect((tx+a)*B,(th-6+b)*B,B,B)}
+})();
+
+</script>
+</body>
+</html>
