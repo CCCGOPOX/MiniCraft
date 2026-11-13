@@ -3,126 +3,123 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<!-- layout: левая колонка с названием и кнопкой, справа блоки-карточки; пиксельный заголовок, спокойный текст -->
 <title>MiniCraft</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600&display=swap">
 <style>
-:root{--bg:#f3f1ec;--fg:#1d2318;--muted:#5b6552;--card:#ffffff;--line:#d9d6cc;--grass:#4e9a2f;--grass-d:#2f6a1a;--dirt:#7a5232;--sky:#7fb8e8;--code:#1d2318;--code-fg:#e8f0dc;
+:root{--bg:#f3f1ec;--fg:#1d2318;--muted:#5b6552;--card:#ffffff;--line:#d9d6cc;--grass:#4e9a2f;--grass-d:#2f6a1a;--dirt:#7a5232;
 --pix:"Press Start 2P",ui-monospace,monospace;--txt:Inter,system-ui,sans-serif}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14180f;--fg:#e9eddf;--muted:#a3ad98;--card:#1d2317;--line:#2f3727;--grass:#6cc144;--grass-d:#3f8a25;--dirt:#a07245;--sky:#2c4a66;--code:#0c0f09;--code-fg:#dbe6cc;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#14180f;--fg:#e9eddf;--muted:#a3ad98;--card:#1d2317;--line:#2f3727;--grass:#6cc144;--grass-d:#3f8a25;--dirt:#a07245;--sky:#2c4a66;--code:#0c0f09;--code-fg:#dbe6cc;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14180f;--fg:#e9eddf;--muted:#a3ad98;--card:#1d2317;--line:#2f3727;--grass:#6cc144;--grass-d:#3f8a25;--dirt:#a07245;color-scheme:dark}}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--txt);padding-block:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 var(--txt);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .wrap{max-width:1000px;margin:0 auto}
-header.hero{padding-block:48px 28px;display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:center}
-h1{font:400 clamp(28px,6vw,52px)/1.15 var(--pix);margin:0 0 16px;text-wrap:balance;letter-spacing:-.02em}
+.top{display:flex;justify-content:flex-end;padding-top:16px}
+.lang{display:flex;gap:0}
+.lang button{font:600 13px var(--txt);padding:6px 12px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}
+.lang button+button{border-left:0}
+.lang button[aria-pressed="true"]{background:var(--grass-d);color:#fff;border-color:var(--grass-d)}
+.lang button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
+header.hero{padding-block:24px 28px;display:grid;grid-template-columns:1fr 1.05fr;gap:32px;align-items:center}
+h1{font:400 clamp(28px,6vw,52px)/1.15 var(--pix);margin:0 0 16px;letter-spacing:-.02em}
 h1 span{color:var(--grass)}
 .lead{font-size:18px;color:var(--muted);max-width:52ch;margin:0 0 24px}
-.btns{display:flex;flex-wrap:wrap;gap:12px}
-.btn{font:600 15px var(--txt);padding:14px 22px;border:0;cursor:pointer;color:#fff;background:var(--grass-d);text-decoration:none;display:inline-block;box-shadow:inset -3px -3px 0 rgba(0,0,0,.28),inset 3px 3px 0 rgba(255,255,255,.22)}
+.btn{font:600 16px var(--txt);padding:15px 26px;border:0;cursor:pointer;color:#fff;background:var(--grass-d);text-decoration:none;display:inline-block;box-shadow:inset -3px -3px 0 rgba(0,0,0,.28),inset 3px 3px 0 rgba(255,255,255,.22)}
 .btn:hover{background:var(--grass)}
-.btn.alt{background:var(--dirt)}
 .btn:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .meta{margin-top:14px;font-size:13px;color:var(--muted)}
-.scene{aspect-ratio:4/3;max-width:100%;border:3px solid var(--line);background:linear-gradient(var(--sky),var(--sky))}
-.scene canvas{width:100%;height:100%;display:block;image-rendering:pixelated}
+.shot{margin:0;min-width:0}
+.shot img{display:block;width:100%;height:auto;border:3px solid var(--line)}
 section{padding-block:28px}
 h2{font:400 18px/1.4 var(--pix);margin:0 0 18px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
 .card{background:var(--card);border:1px solid var(--line);padding:16px 18px;min-width:0}
 .card h3{margin:0 0 6px;font:600 16px var(--txt)}
 .card p{margin:0;color:var(--muted);font-size:14.5px}
-pre{background:var(--code);color:var(--code-fg);padding:16px;overflow-x:auto;font:13.5px/1.6 ui-monospace,Consolas,monospace;margin:10px 0}
+.gal{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.gal figure{margin:0;min-width:0}
+.gal img{display:block;width:100%;height:auto;border:2px solid var(--line)}
+.gal figcaption{font-size:13px;color:var(--muted);margin-top:6px}
 ol{padding-left:22px;margin:0}
 li{margin-bottom:8px}
-table{border-collapse:collapse;width:100%}
 .tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
 td,th{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);font-size:14.5px}
 th{color:var(--muted);font-weight:500}
 kbd{background:var(--card);border:1px solid var(--line);padding:1px 7px;font:13px ui-monospace,monospace}
 footer{padding-block:32px 48px;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
-#srcbox{width:100%;height:120px;font:12px monospace;background:var(--code);color:var(--code-fg);border:1px solid var(--line);display:none}
-@media (max-width:760px){header.hero{grid-template-columns:1fr;padding-block:32px 16px}}
-@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+@media (max-width:760px){header.hero{grid-template-columns:1fr;padding-block:16px}.gal{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
+<div class="top"><div class="lang" role="group" aria-label="Language"><button type="button" data-lang="ru" aria-pressed="true">RU</button><button type="button" data-lang="en" aria-pressed="false">EN</button></div></div>
 <header class="hero">
 <div>
 <h1>Mini<span>Craft</span></h1>
-<p class="lead">3D-игра про блоки на чистом Java: добывайте ресурсы, стройте, летите в Нижний мир и играйте с друзьями по сети. Один файл, никаких библиотек.</p>
-<div class="btns"><a class="btn" href="MiniCraft.jar" download>Скачать MiniCraft.jar</a><a class="btn alt" href="MiniCraft.java" download>Исходный код (.java)</a></div>
-<div class="meta">Версия 1.7.0 · нужна Java 8 или новее · Windows, macOS, Linux</div>
+<p class="lead" data-i="lead"></p>
+<a class="btn" href="MiniCraft1.7.0.exe" download data-i="dl"></a>
+<div class="meta" data-i="meta"></div>
 </div>
-<div class="scene"><canvas id="cv" width="160" height="120" aria-label="Пиксельный пейзаж из блоков"></canvas></div>
+<figure class="shot"><img src="screenshots/hero.jpg" width="1280" height="720" alt="" data-alt="alt"></figure>
 </header>
-
 <section>
-<h2>Что внутри</h2>
+<h2 data-i="h_inside"></h2>
 <div class="grid">
-<div class="card"><h3>Выживание и творчество</h3><p>Голод, сердца, крафт, печки, сундуки, ферма, кровать и смена дня и ночи.</p></div>
-<div class="card"><h3>Нижний мир</h3><p>Портал из обсидиана и огниво. Магма, адский камень и светокамень на потолке.</p></div>
-<div class="card"><h3>Игра по сети</h3><p>Один открывает мир, друзья заходят по IP. Вещи друга сохраняются после выхода.</p></div>
-<div class="card"><h3>Строительство</h3><p>Бетон, терракота, кварц, паркет, двери, люки, стекло, лампы и ещё 20 декоративных блоков.</p></div>
-<div class="card"><h3>Бой</h3><p>Мечи, броня, критические удары в прыжке, PvP между игроками и TNT с цепной реакцией.</p></div>
-<div class="card"><h3>Скины и достижения</h3><p>Свой скин из PNG, аккаунты с ником, 11 достижений и мини-карта.</p></div>
+<div class="card"><h3 data-i="c1t"></h3><p data-i="c1p"></p></div>
+<div class="card"><h3 data-i="c2t"></h3><p data-i="c2p"></p></div>
+<div class="card"><h3 data-i="c3t"></h3><p data-i="c3p"></p></div>
+<div class="card"><h3 data-i="c4t"></h3><p data-i="c4p"></p></div>
+<div class="card"><h3 data-i="c5t"></h3><p data-i="c5p"></p></div>
+<div class="card"><h3 data-i="c6t"></h3><p data-i="c6p"></p></div>
 </div>
 </section>
-
 <section>
-<h2>Как запустить</h2>
-<ol>
-<li>Установите Java (JDK или JRE версии 8 и выше).</li>
-<li>Скачайте игру: нажмите «Скачать MiniCraft.jar» наверху страницы.</li>
-<li>Запустите двойным щелчком по <b>MiniCraft.jar</b> или командой:</li>
-</ol>
-<pre>java -jar MiniCraft.jar</pre>
-<p style="color:var(--muted);font-size:14.5px;margin:0">Если у вас только файл <b>MiniCraft.java</b>, соберите его так:</p>
-<pre>javac --release 8 -encoding UTF-8 MiniCraft.java
-java MiniCraft</pre>
+<h2 data-i="h_shots"></h2>
+<div class="gal">
+<figure><img src="screenshots/portal.jpg" width="1280" height="720" alt="" loading="lazy"><figcaption data-i="cap2"></figcaption></figure>
+<figure><img src="screenshots/snow.jpg" width="1280" height="720" alt="" loading="lazy"><figcaption data-i="cap3"></figcaption></figure>
+<figure><img src="screenshots/nether.jpg" width="1280" height="720" alt="" loading="lazy"><figcaption data-i="cap4"></figcaption></figure>
+</div>
 </section>
-
 <section>
-<h2>Игра с друзьями</h2>
-<p style="margin:0 0 8px">В меню выберите «Сетевая игра» и откройте свой мир. Друзья вводят ваш IP-адрес. Порт <b>25570</b> (TCP), для игры через интернет его нужно пробросить на роутере. У всех должна быть одна и та же версия игры.</p>
+<h2 data-i="h_run"></h2>
+<ol><li data-i="r1"></li><li data-i="r2"></li><li data-i="r3"></li></ol>
 </section>
-
 <section>
-<h2>Управление</h2>
+<h2 data-i="h_net"></h2>
+<p style="margin:0" data-i="net"></p>
+</section>
+<section>
+<h2 data-i="h_keys"></h2>
 <div class="tw"><table>
-<tr><th>Клавиша</th><th>Действие</th></tr>
-<tr><td><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></td><td>Ходьба, Shift — бег</td></tr>
-<tr><td><kbd>Пробел</kbd></td><td>Прыжок, плавание</td></tr>
-<tr><td>ЛКМ / ПКМ</td><td>Ломать и бить / ставить, открывать, есть</td></tr>
-<tr><td><kbd>E</kbd></td><td>Инвентарь и крафт</td></tr>
-<tr><td><kbd>1</kbd>–<kbd>9</kbd></td><td>Ячейки панели</td></tr>
-<tr><td><kbd>Q</kbd></td><td>Выбросить предмет</td></tr>
-<tr><td><kbd>J</kbd></td><td>Достижения</td></tr>
-<tr><td><kbd>M</kbd></td><td>Мини-карта</td></tr>
-<tr><td><kbd>F11</kbd> / <kbd>F2</kbd></td><td>Полный экран / скриншот</td></tr>
+<tr><th data-i="k_key"></th><th data-i="k_act"></th></tr>
+<tr><td><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></td><td data-i="kw"></td></tr>
+<tr><td><kbd>Space</kbd></td><td data-i="ks"></td></tr>
+<tr><td>LMB / RMB</td><td data-i="km"></td></tr>
+<tr><td><kbd>E</kbd></td><td data-i="ke"></td></tr>
+<tr><td><kbd>1</kbd>–<kbd>9</kbd></td><td data-i="k1"></td></tr>
+<tr><td><kbd>Q</kbd></td><td data-i="kq"></td></tr>
+<tr><td><kbd>J</kbd></td><td data-i="kj"></td></tr>
+<tr><td><kbd>M</kbd></td><td data-i="kmap"></td></tr>
+<tr><td><kbd>F11</kbd> / <kbd>F2</kbd></td><td data-i="kf"></td></tr>
 </table></div>
 </section>
-<footer>MiniCraft — независимая игра, написанная на Java с использованием только стандартного JDK. Не связана с Mojang и Microsoft.</footer>
+<footer data-i="foot"></footer>
 </div>
-
 <script>
-(function(){
-var c=document.getElementById('cv'),x=c.getContext('2d');
-var W=160,H=120,B=8,cols=[0x5f,0xa8,0x3c];
-function rnd(i,j){var h=(i*374761393+j*668265263)^0x5bd1e995;h=(h^(h>>>13))*1274126177;return ((h^(h>>>16))>>>0)/4294967295}
-var sky=x.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#5d9ee0');sky.addColorStop(1,'#bcdcf5');x.fillStyle=sky;x.fillRect(0,0,W,H);
-x.fillStyle='#fff8d0';x.fillRect(120,12,12,12);
-x.fillStyle='rgba(255,255,255,.85)';[[20,18,28],[70,30,22]].forEach(function(q){x.fillRect(q[0],q[1],q[2],6);x.fillRect(q[0]+6,q[1]-4,q[2]-12,4)});
-for(var i=0;i<W/B;i++){var h=6+Math.round(2*Math.sin(i*.7)+rnd(i,1)*2);
- for(var j=h;j<H/B;j++){var d=j-h,col=d==0?(rnd(i,j)>.5?'#5fa83c':'#56993a'):d<3?(rnd(i,j)>.5?'#8b5e3c':'#7d5334'):(rnd(i,j)>.6?'#7a7a7a':'#6e6e6e');
-  if(d>=3&&rnd(i+9,j)>.93)col='#2b2b2b';x.fillStyle=col;x.fillRect(i*B,j*B,B,B);x.fillStyle='rgba(0,0,0,.12)';x.fillRect(i*B,j*B+B-1,B,1);x.fillRect(i*B+B-1,j*B,1,B)}}
-var tx=9,th=6+Math.round(2*Math.sin(tx*.7)+rnd(tx,1)*2);
-for(var t=1;t<=4;t++){x.fillStyle='#6b4a2a';x.fillRect(tx*B,(th-t)*B,B,B)}
-x.fillStyle='#3f8a2a';for(var a=-2;a<=2;a++)for(var b=0;b<3;b++){if(Math.abs(a)==2&&b==0)continue;x.fillRect((tx+a)*B,(th-6+b)*B,B,B)}
-})();
-
+var T={"ru": {"title": "MiniCraft — игра про блоки на Java", "lead": "3D-игра про блоки на чистом Java: добывайте ресурсы, стройте, летите в Нижний мир и играйте с друзьями по сети. Один файл, никаких библиотек.", "dl": "Скачать для Windows (.exe)", "meta": "Версия 1.7.0 · нужна Java 8 или новее · Windows", "h_inside": "Что внутри", "c1t": "Выживание и творчество", "c1p": "Голод, сердца, крафт, печки, сундуки, ферма, кровать и смена дня и ночи.", "c2t": "Нижний мир", "c2p": "Портал из обсидиана и огниво. Магма, адский камень и светокамень на потолке.", "c3t": "Игра по сети", "c3p": "Один открывает мир, друзья заходят по IP. Вещи друга сохраняются после выхода.", "c4t": "Строительство", "c4p": "Бетон, терракота, кварц, паркет, двери, люки, стекло, лампы и ещё 20 декоративных блоков.", "c5t": "Бой", "c5p": "Мечи, броня, критические удары в прыжке, PvP между игроками и TNT с цепной реакцией.", "c6t": "Скины и достижения", "c6p": "Свой скин из PNG, аккаунты с ником, 11 достижений и мини-карта.", "h_shots": "Скриншоты", "cap1": "Равнины днём", "cap2": "Портал в Нижний мир", "cap3": "Снежный лес", "cap4": "Нижний мир", "h_run": "Как запустить", "r1": "Установите Java (JDK или JRE версии 8 и выше).", "r2": "Скачайте игру: нажмите «Скачать для Windows (.exe)» наверху страницы.", "r3": "Запустите двойным щелчком по <b>MiniCraft1.7.0.exe</b>.", "h_net": "Игра с друзьями", "net": "В меню выберите «Сетевая игра» и откройте свой мир. Друзья вводят ваш IP-адрес. Порт <b>25570</b> (TCP), для игры через интернет его нужно пробросить на роутере. У всех должна быть одна и та же версия игры.", "h_keys": "Управление", "k_key": "Клавиша", "k_act": "Действие", "kw": "Ходьба, Shift — бег", "ks": "Прыжок, плавание", "km": "Ломать и бить / ставить, открывать, есть", "ke": "Инвентарь и крафт", "k1": "Ячейки панели", "kq": "Выбросить предмет", "kj": "Достижения", "kmap": "Мини-карта", "kf": "Полный экран / скриншот", "foot": "MiniCraft — независимая игра, написанная на Java с использованием только стандартного JDK. Не связана с Mojang и Microsoft.", "alt": "Скриншот игры MiniCraft"}, "en": {"title": "MiniCraft — a block game in Java", "lead": "A 3D block game written in plain Java: gather resources, build, travel to the Nether and play with friends over the network. One file, no libraries.", "dl": "Download for Windows (.exe)", "meta": "Version 1.7.0 · requires Java 8 or newer · Windows", "h_inside": "What's inside", "c1t": "Survival and creative", "c1p": "Hunger, hearts, crafting, furnaces, chests, farming, beds and a day and night cycle.", "c2t": "The Nether", "c2p": "An obsidian portal and a flint. Magma, netherrack and glowstone on the ceiling.", "c3t": "Multiplayer", "c3p": "One player opens a world and friends join by IP. A friend's items are kept after they leave.", "c4t": "Building", "c4p": "Concrete, terracotta, quartz, parquet, doors, trapdoors, glass, lamps and 20 more decorative blocks.", "c5t": "Combat", "c5p": "Swords, armor, critical hits while jumping, PvP between players and TNT with chain reactions.", "c6t": "Skins and achievements", "c6p": "Your own PNG skin, nickname accounts, 11 achievements and a minimap.", "h_shots": "Screenshots", "cap1": "Plains at noon", "cap2": "Portal to the Nether", "cap3": "Snowy forest", "cap4": "The Nether", "h_run": "How to run", "r1": "Install Java (JDK or JRE, version 8 or newer).", "r2": "Download the game: press “Download for Windows (.exe)” at the top of the page.", "r3": "Start it with a double click on <b>MiniCraft1.7.0.exe</b>.", "h_net": "Playing with friends", "net": "Choose “Multiplayer” in the menu and open your world. Friends enter your IP address. The port is <b>25570</b> (TCP); to play over the internet you need to forward it on your router. Everyone must have the same game version.", "h_keys": "Controls", "k_key": "Key", "k_act": "Action", "kw": "Walk, Shift to sprint", "ks": "Jump, swim", "km": "Break and hit / place, open, eat", "ke": "Inventory and crafting", "k1": "Hotbar slots", "kq": "Drop item", "kj": "Achievements", "kmap": "Minimap", "kf": "Fullscreen / screenshot", "foot": "MiniCraft is an independent game written in Java using only the standard JDK. Not affiliated with Mojang or Microsoft.", "alt": "MiniCraft screenshot"}};
+function setLang(l){
+ var d=T[l]||T.ru;
+ document.documentElement.lang=l;
+ document.title=d.title;
+ document.querySelectorAll('[data-i]').forEach(function(e){e.innerHTML=d[e.getAttribute('data-i')]});
+ document.querySelectorAll('[data-alt]').forEach(function(e){e.alt=d[e.getAttribute('data-alt')]});
+ document.querySelectorAll('.lang button').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-lang')===l?'true':'false')});
+ try{localStorage.setItem('mc-lang',l)}catch(e){}
+}
+document.querySelectorAll('.lang button').forEach(function(b){b.addEventListener('click',function(){setLang(b.getAttribute('data-lang'))})});
+var l0=null;try{l0=localStorage.getItem('mc-lang')}catch(e){}
+if(!l0)l0=(navigator.language||'ru').toLowerCase().indexOf('ru')===0?'ru':'en';
+setLang(l0==='en'?'en':'ru');
 </script>
 </body>
 </html>
