@@ -4,7 +4,7 @@
 
 download: https://cccgopox.github.io/MiniCraft/
 
-## Запуск
+## How to play
 you should have java 8+
 
 ---------------------------------------
