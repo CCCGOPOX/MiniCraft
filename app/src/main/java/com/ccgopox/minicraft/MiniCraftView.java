@@ -16,7 +16,7 @@ import java.util.Random;
 
 public final class MiniCraftView extends View {
     private static final int WORLD_X = 128, WORLD_Z = 128, WORLD_Y = 40;
-    private static final int RW = 200, RH = 112;
+    private static final int RW = 160, RH = 90;
     private static final float FOV = 0.78f;
     private final byte[] world = new byte[WORLD_X * WORLD_Y * WORLD_Z];
     private final Bitmap frame = Bitmap.createBitmap(RW, RH, Bitmap.Config.RGB_565);
@@ -132,7 +132,7 @@ public final class MiniCraftView extends View {
         }
         px = 64;
         pz = 64;
-        py = heightAt(64, 64) + 1.8f;
+        py = heightAt(64, 64) + 2.65f;
     }
 
     private void loadGame() {
@@ -153,7 +153,7 @@ public final class MiniCraftView extends View {
                     try {
                         int i = Integer.parseInt(pair[0]);
                         int id = Integer.parseInt(pair[1]);
-                        if (i >= 0 && i < world.length) world[i] = (byte) id;
+                        if (i >= 0 && i < world.length) { world[i] = (byte) id; changed.put(i, (byte) id); }
                     } catch (Exception ignored) { }
                 }
             }
