@@ -32,6 +32,14 @@ public class MainActivity extends Activity {
         title.setTextColor(0xffffffff); title.setTextSize(16); title.setPadding(18,12,18,12);
         FrameLayout.LayoutParams tp = new FrameLayout.LayoutParams(-2,-2,Gravity.TOP|Gravity.CENTER_HORIZONTAL);
         root.addView(title,tp);
+        TextView crosshair = new TextView(this);
+        crosshair.setText("+");
+        crosshair.setTextColor(0xffffffff);
+        crosshair.setTextSize(26);
+        crosshair.setGravity(Gravity.CENTER);
+        crosshair.setShadowLayer(3, 0, 0, 0xff000000);
+        FrameLayout.LayoutParams cp = new FrameLayout.LayoutParams(48,48,Gravity.CENTER);
+        root.addView(crosshair,cp);
         addButton(root,"▲",Gravity.BOTTOM|Gravity.LEFT,110,world,0);
         addButton(root,"◀",Gravity.BOTTOM|Gravity.LEFT,58,world,1);
         addButton(root,"▶",Gravity.BOTTOM|Gravity.LEFT,162,world,2);
