@@ -35,8 +35,8 @@ public class MainActivity extends Activity {
         addButton(root,"▲",Gravity.BOTTOM|Gravity.LEFT,110,world,0);
         addButton(root,"◀",Gravity.BOTTOM|Gravity.LEFT,58,world,1);
         addButton(root,"▶",Gravity.BOTTOM|Gravity.LEFT,162,world,2);
-        addButton(root,"BREAK",Gravity.BOTTOM|Gravity.RIGHT,120,world,3);
-        addButton(root,"PLACE",Gravity.BOTTOM|Gravity.RIGHT,58,world,4);
+        addButton(root,"BREAK",Gravity.BOTTOM|Gravity.RIGHT,112,world,3);
+        addButton(root,"PLACE",Gravity.BOTTOM|Gravity.RIGHT,0,world,4);
         hotbarButtons = new Button[3];
         String[] names = {"GRASS", "DIRT", "STONE"};
         int[] leftMargins = {0, 0, 145};
@@ -46,7 +46,7 @@ public class MainActivity extends Activity {
             Button slot = new Button(this);
             hotbarButtons[i] = slot;
             FrameLayout.LayoutParams hp = new FrameLayout.LayoutParams(140, 70, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
-            hp.setMargins(leftMargins[i], 0, rightMargins[i], 18);
+            hp.setMargins(leftMargins[i], 0, rightMargins[i], 125);
             root.addView(slot, hp);
             slot.setOnClickListener(v -> { world.select(type); refreshHotbar(); });
         }
