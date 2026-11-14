@@ -28,6 +28,7 @@ public class MainActivity extends Activity {
     private TextView survivalHud;
     private final Handler controlHandler=new Handler(Looper.getMainLooper());
     private final Runnable hudUpdater = new Runnable(){ public void run(){ if(survivalHud!=null && world!=null){survivalHud.setText(world.status());survivalHud.postDelayed(this,1000);} } };
+    private final Runnable autosaveUpdater = new Runnable(){ public void run(){if(world!=null){world.saveWorld();controlHandler.postDelayed(this,10000);}} };
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         getWindow().getDecorView().setSystemUiVisibility(5894 | 1024 | 512);
@@ -148,7 +149,7 @@ public class MainActivity extends Activity {
             public void onStopTrackingTouch(SeekBar bar){}
         });
         setContentView(root);
-        refreshSurvivalHud(); survivalHud.postDelayed(hudUpdater,1000);
+        refreshSurvivalHud(); survivalHud.postDelayed(hudUpdater,1000);controlHandler.postDelayed(autosaveUpdater,10000);
     }
     private void refreshSurvivalHud(){if(survivalHud!=null&&world!=null)survivalHud.setText(world.status());}
     private void refreshHotbar() {
@@ -177,8 +178,8 @@ public class MainActivity extends Activity {
         }else b.setOnClickListener(v -> {if(action==3){w.edit(false);refreshHotbar();refreshSurvivalHud();}if(action==4){w.edit(true);refreshHotbar();refreshSurvivalHud();}});
 
     }
-    @Override protected void onPause(){super.onPause(); if(world!=null){world.saveWorld();world.onPause();}}
-    @Override protected void onResume(){super.onResume(); if(world!=null)world.onResume();}
+    @Override protected void onPause(){super.onPause();controlHandler.removeCallbacks(autosaveUpdater);if(world!=null){world.saveWorld();world.onPause();}}
+    @Override protected void onResume(){super.onResume();if(world!=null)world.onResume();controlHandler.removeCallbacks(autosaveUpdater);controlHandler.postDelayed(autosaveUpdater,10000);}
 
     static class WorldView extends GLSurfaceView {
         final WorldRenderer renderer;
