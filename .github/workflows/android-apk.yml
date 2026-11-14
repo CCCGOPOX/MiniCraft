@@ -1,4 +1,5 @@
 name: Build MiniCraft Android APK
+# Rebuild after renderer syntax correction
 on:
   push:
     branches: [ "android-port" ]
