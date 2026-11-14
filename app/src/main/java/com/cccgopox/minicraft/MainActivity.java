@@ -56,6 +56,17 @@ public class MainActivity extends Activity {
         WorldView(Activity a){super(a);setEGLContextClientVersion(2);renderer=new WorldRenderer();setRenderer(renderer);setRenderMode(RENDERMODE_CONTINUOUSLY);}
         void move(int x,int z,int jump){renderer.move(x,z,jump);}
         void edit(boolean place){renderer.edit(place);}
+        private float lastX,lastY;
+        @Override public boolean onTouchEvent(MotionEvent e) {
+            if(e.getAction()==MotionEvent.ACTION_DOWN){lastX=e.getX();lastY=e.getY();return true;}
+            if(e.getAction()==MotionEvent.ACTION_MOVE){
+                float dx=e.getX()-lastX,dy=e.getY()-lastY;
+                lastX=e.getX();lastY=e.getY();
+                renderer.rotate(dx*0.35f,dy*0.2f);
+                return true;
+            }
+            return true;
+        }
     }
     static class WorldRenderer implements GLSurfaceView.Renderer {
         private final float[] projection=new float[16], view=new float[16], vp=new float[16], model=new float[16], mvp=new float[16];
@@ -69,15 +80,18 @@ public class MainActivity extends Activity {
         private volatile float px=12,pz=12;
         private volatile int selected=1;
         private volatile float yaw=0;
+        private volatile float pitch=18;
+        private volatile float jumpOffset=0;
+        void rotate(float dx,float dy){yaw+=dx;pitch=Math.max(-5,Math.min(55,pitch+dy));}
         WorldRenderer(){Random r=new Random(22);for(int z=0;z<24;z++)for(int x=0;x<24;x++)map[z][x]= (int)(2+Math.sin(x*.4)*1.4+Math.cos(z*.3)*1.2+r.nextDouble()*1.2);}
-        void move(int x,int z,int jump){px=Math.max(1,Math.min(22,px+x));pz=Math.max(1,Math.min(22,pz+z));if(jump!=0){} }
+        void move(int x,int z,int jump){double a=Math.toRadians(yaw);float nx=(float)(x*Math.cos(a)-z*Math.sin(a));float nz=(float)(x*Math.sin(a)+z*Math.cos(a));px=Math.max(1,Math.min(22,px+nx));pz=Math.max(1,Math.min(22,pz+nz));if(jump!=0)jumpOffset=1.5f; }
         void edit(boolean place){int x=Math.max(0,Math.min(23,Math.round(px))),z=Math.max(0,Math.min(23,Math.round(pz)));if(place)map[z][x]++;else if(map[z][x]>1)map[z][x]--;}
         @Override public void onSurfaceCreated(javax.microedition.khronos.egl.EGLConfig c){GLES20.glClearColor(.48f,.72f,.94f,1);GLES20.glEnable(GLES20.GL_DEPTH_TEST);String vs="uniform mat4 uMVP; attribute vec3 aPos; void main(){gl_Position=uMVP*vec4(aPos,1.0);}";String fs="precision mediump float; uniform vec4 uColor; void main(){gl_FragColor=uColor;}";program=GLES20.glCreateProgram();int v=shader(GLES20.GL_VERTEX_SHADER,vs),f=shader(GLES20.GL_FRAGMENT_SHADER,fs);GLES20.glAttachShader(program,v);GLES20.glAttachShader(program,f);GLES20.glLinkProgram(program);pos=GLES20.glGetAttribLocation(program,"aPos");color=GLES20.glGetUniformLocation(program,"uColor");mvpLoc=GLES20.glGetUniformLocation(program,"uMVP");buffer=ByteBuffer.allocateDirect(108*4).order(ByteOrder.nativeOrder()).asFloatBuffer();}
         int shader(int type,String src){int s=GLES20.glCreateShader(type);GLES20.glShaderSource(s,src);GLES20.glCompileShader(s);return s;}
         @Override public void onSurfaceChanged(javax.microedition.khronos.egl.EGLConfig c,int w,int h){GLES20.glViewport(0,0,w,h);Matrix.perspectiveM(projection,0,55,(float)w/h,.1f,100f);}
-        @Override public void onDrawFrame(javax.microedition.khronos.opengles.GL10 gl){GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT|GLES20.GL_DEPTH_BUFFER_BIT);Matrix.setLookAtM(view,0,px+13,18,pz+19,px,0,pz,0,1,0);Matrix.multiplyMM(vp,0,projection,0,view,0);GLES20.glUseProgram(program);GLES20.glEnableVertexAttribArray(pos);buffer.position(0);GLES20.glVertexAttribPointer(pos,3,GLES20.GL_FLOAT,false,0,buffer);
+        @Override public void onDrawFrame(javax.microedition.khronos.opengles.GL10 gl){jumpOffset=Math.max(0,jumpOffset-0.035f);GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT|GLES20.GL_DEPTH_BUFFER_BIT);double angle=Math.toRadians(yaw);float distance=18;float eyeX=px-(float)Math.sin(angle)*distance;float eyeZ=pz-(float)Math.cos(angle)*distance;float eyeY=10+(pitch*.18f);Matrix.setLookAtM(view,0,eyeX,eyeY,eyeZ,px,1+jumpOffset*.15f,pz,0,1,0);Matrix.multiplyMM(vp,0,projection,0,view,0);GLES20.glUseProgram(program);GLES20.glEnableVertexAttribArray(pos);buffer.position(0);GLES20.glVertexAttribPointer(pos,3,GLES20.GL_FLOAT,false,0,buffer);
             for(int z=0;z<24;z++)for(int x=0;x<24;x++){int h=map[z][x];for(int y=0;y<h;y++){Matrix.setIdentityM(model,0);Matrix.translateM(model,0,x,y,z);Matrix.scaleM(model,0,1,1,1);Matrix.multiplyMM(mvp,0,vp,0,model,0);GLES20.glUniformMatrix4fv(mvpLoc,1,false,mvp,0);float shade=y==h-1?1f:.62f;GLES20.glUniform4f(color,(x%3==0?.35f:.42f)*shade,(y==h-1?.66f:.42f)*shade,.25f*shade,1);drawCube();}}
-            Matrix.setIdentityM(model,0);Matrix.translateM(model,0,px, map[Math.max(0,Math.min(23,(int)pz))][Math.max(0,Math.min(23,(int)px))]+.5f,pz);Matrix.scaleM(model,0,.55f,1.2f,.55f);Matrix.multiplyMM(mvp,0,vp,0,model,0);GLES20.glUniformMatrix4fv(mvpLoc,1,false,mvp,0);GLES20.glUniform4f(color,.12f,.25f,.85f,1);drawCube();GLES20.glDisableVertexAttribArray(pos);
+            Matrix.setIdentityM(model,0);Matrix.translateM(model,0,px, map[Math.max(0,Math.min(23,(int)pz))][Math.max(0,Math.min(23,(int)px))]+jumpOffset,pz);Matrix.scaleM(model,0,.55f,1.2f,.55f);Matrix.multiplyMM(mvp,0,vp,0,model,0);GLES20.glUniformMatrix4fv(mvpLoc,1,false,mvp,0);GLES20.glUniform4f(color,.12f,.25f,.85f,1);drawCube();GLES20.glDisableVertexAttribArray(pos);
         }
         void drawCube(){
             float[] v={
