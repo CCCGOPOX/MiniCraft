@@ -4,6 +4,8 @@ MiniCraft — my own game! like minecraft
 A 3D sandbox survival and building game inspired by Minecraft, made in Java. Explore an infinite block world, mine resources, build houses, travel to another dimension, and play with friends!
 
 -------------------------------------------------------------------------------------------------------
+https://cccgopox.github.io/MiniCraft/ - My site with game download!
+-------------------------------------------------------------------------------------------------------
 
 What's inside:
 
