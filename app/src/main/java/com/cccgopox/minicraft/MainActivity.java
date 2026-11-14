@@ -199,7 +199,7 @@ public class MainActivity extends Activity {
     private void refreshSurvivalHud(){if(survivalHud!=null&&world!=null)survivalHud.setText(world.status());}
     private void refreshHotbar() {
         if (hotbarButtons == null || world == null) return;
-        String[] names = {"GRASS","DIRT","STONE","PLANKS","LEAVES","LOG","BEDROCK","SAND","SNOW"};
+        String[] names = {"ТРАВА","ЗЕМЛЯ","КАМЕНЬ","ДОСКИ","ЛИСТВА","БРЕВНО","БЕДРОК","ПЕСОК","СНЕГ"};
         for (int i = 0; i < hotbarButtons.length; i++) {
             hotbarButtons[i].setTextSize(8.5f);hotbarButtons[i].setText((world.selectedType() == i ? "▶ " : "") + names[i] + "\n" + world.inventoryCount(i));
             hotbarButtons[i].setAlpha(world.selectedType() == i ? 1.0f : 0.72f);
