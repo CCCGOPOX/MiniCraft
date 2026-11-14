@@ -385,7 +385,7 @@ public class MainActivity extends Activity {
             int[] target=rayTarget();
             if(target==null){notice="No block in reach";return;}
             int x=target[0],z=target[1];
-            if(target[2]==1){if(place){notice="Cannot place on a tree";return;}vegetation[z][x]=0;inventory[3]=Math.min(999,inventory[3]+2);notice="Collected 2 wood";return;}
+            if(target[2]==1){if(place){notice="Cannot place on a tree";return;}vegetation[z][x]=0;inventory[5]=Math.min(999,inventory[5]+2);notice="Collected 2 logs";return;}
             if(place){
                 if(inventory[selected]<=0){notice="Not enough blocks";return;}
                 if(map[z][x]>=63){notice="Block limit reached";return;}
