@@ -107,6 +107,9 @@ public class MainActivity extends Activity {
         panel.addView(subtitle,new LinearLayout.LayoutParams(-1,-2));
         Button play = new Button(this); play.setText("ИГРАТЬ / ПРОДОЛЖИТЬ");
         panel.addView(play,new LinearLayout.LayoutParams(280,64));
+        Button newWorld = new Button(this); newWorld.setText("СОЗДАТЬ НОВЫЙ МИР");
+        panel.addView(newWorld,new LinearLayout.LayoutParams(280,56));
+        newWorld.setOnClickListener(v->{world.resetWorld();recreate();});
         TextView settingsTitle = new TextView(this);
         settingsTitle.setText("ЧУВСТВИТЕЛЬНОСТЬ КАМЕРЫ");
         settingsTitle.setTextColor(0xffffffff);
@@ -194,6 +197,7 @@ public class MainActivity extends Activity {
         void craft(){renderer.craft();}
         String status(){return renderer.status();}
         void saveWorld(){renderer.saveWorld();}
+        void resetWorld(){renderer.resetWorld();}
         void setSensitivity(float value){renderer.setSensitivity(value);}
         void setRenderDistance(int value){renderer.setRenderDistance(value);}
         int renderDistance(){return renderer.renderDistance();}
@@ -240,6 +244,7 @@ public class MainActivity extends Activity {
         void setRenderDistance(int value){renderDistance=Math.max(8,Math.min(24,value));prefs.edit().putInt("render_distance",renderDistance).apply();}
         int renderDistance(){return renderDistance;}
         private volatile boolean paused=true;
+        private volatile boolean resetRequested=false;
         private volatile float jumpOffset=0;
         private float dayTime=0;
         private volatile int health=20;
@@ -253,9 +258,10 @@ public class MainActivity extends Activity {
         private int mobFrame=0;
         void rotate(float dx,float dy){yaw+=dx;pitch=Math.max(-5,Math.min(55,pitch+dy));}
         void zoom(float amount){cameraDistance=Math.max(8,Math.min(28,cameraDistance+amount));prefs.edit().putFloat("camera_distance",cameraDistance).apply();}
-        WorldRenderer(Context context){prefs=context.getSharedPreferences("minicraft_world",Context.MODE_PRIVATE);sensitivity=Math.max(0.05f,Math.min(1.0f,prefs.getFloat("camera_sensitivity",0.415f)));renderDistance=Math.max(8,Math.min(24,prefs.getInt("render_distance",12)));cameraDistance=Math.max(8,Math.min(28,prefs.getFloat("camera_distance",18f)));dayTime=prefs.getFloat("day_time",0f);Random r=new Random(22);for(int z=0;z<24;z++)for(int x=0;x<24;x++){float climate=(float)(Math.sin(x*.19)+Math.cos(z*.16)+Math.sin((x+z)*.11));biome[z][x]=climate>1.0f?1:(climate<-.8f?2:0);map[z][x]=Math.max(2,Math.min(6,(int)(2+Math.sin(x*.4)*1.4+Math.cos(z*.3)*1.2+r.nextDouble()*1.2)));for(int y=0;y<map[z][x];y++)blocks[z][x][y]=y==map[z][x]-1?1:(y>=map[z][x]-3?2:3);if((x-12)*(x-12)+(z-12)*(z-12)>12){if(biome[z][x]==0&&r.nextFloat()<.075f)vegetation[z][x]=1;else if(biome[z][x]==1&&r.nextFloat()<.025f)vegetation[z][x]=2;else if(biome[z][x]==2&&r.nextFloat()<.055f)vegetation[z][x]=3;}}loadWorld();}
+        WorldRenderer(Context context){prefs=context.getSharedPreferences("minicraft_world",Context.MODE_PRIVATE);sensitivity=Math.max(0.05f,Math.min(1.0f,prefs.getFloat("camera_sensitivity",0.415f)));renderDistance=Math.max(8,Math.min(24,prefs.getInt("render_distance",12)));cameraDistance=Math.max(8,Math.min(28,prefs.getFloat("camera_distance",18f)));dayTime=prefs.getFloat("day_time",0f);long seed=prefs.getLong("world_seed",System.currentTimeMillis());prefs.edit().putLong("world_seed",seed).apply();Random r=new Random(seed);for(int z=0;z<24;z++)for(int x=0;x<24;x++){float climate=(float)(Math.sin(x*.19)+Math.cos(z*.16)+Math.sin((x+z)*.11));biome[z][x]=climate>1.0f?1:(climate<-.8f?2:0);map[z][x]=Math.max(2,Math.min(6,(int)(2+Math.sin(x*.4)*1.4+Math.cos(z*.3)*1.2+r.nextDouble()*1.2)));for(int y=0;y<map[z][x];y++)blocks[z][x][y]=y==map[z][x]-1?1:(y>=map[z][x]-3?2:3);if((x-12)*(x-12)+(z-12)*(z-12)>12){if(biome[z][x]==0&&r.nextFloat()<.075f)vegetation[z][x]=1;else if(biome[z][x]==1&&r.nextFloat()<.025f)vegetation[z][x]=2;else if(biome[z][x]==2&&r.nextFloat()<.055f)vegetation[z][x]=3;}}loadWorld();}
         void loadWorld(){for(int i=0;i<3;i++)inventory[i]=Math.max(0,Math.min(999,prefs.getInt("inventory_"+i,inventory[i])));String data=prefs.getString("terrain","");if(data.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=data.charAt(z*24+x);if(c>='1'&&c<='9')map[z][x]=c-'0';}}String saved=prefs.getString("blocks","");if(saved.length()==24*24*9){for(int z=0;z<24;z++)for(int x=0;x<24;x++)for(int y=0;y<9;y++){char c=saved.charAt((z*24+x)*9+y);if(c>='0'&&c<='3')blocks[z][x][y]=c-'0';}}else{String old=prefs.getString("block_types","");if(old.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=old.charAt(z*24+x);if(c>='0'&&c<='2'&&map[z][x]>0)blocks[z][x][map[z][x]-1]=c-'0'+1;}}}px=Math.max(1,Math.min(22,prefs.getFloat("player_x",12)));pz=Math.max(1,Math.min(22,prefs.getFloat("player_z",12)));health=Math.max(1,Math.min(20,prefs.getInt("health",20)));hunger=Math.max(0,Math.min(20,prefs.getInt("hunger",20)));food=Math.max(0,Math.min(99,prefs.getInt("food",8)));}
-        void saveWorld(){StringBuilder data=new StringBuilder(576),savedBlocks=new StringBuilder(24*24*9);for(int z=0;z<24;z++)for(int x=0;x<24;x++){data.append((char)('0'+Math.max(1,Math.min(9,map[z][x]))));for(int y=0;y<9;y++)savedBlocks.append((char)('0'+Math.max(0,Math.min(3,blocks[z][x][y]))));}SharedPreferences.Editor e=prefs.edit().putString("terrain",data.toString()).putString("blocks",savedBlocks.toString()).putFloat("player_x",px).putFloat("player_z",pz).putInt("health",health).putInt("hunger",hunger).putInt("food",food).putFloat("day_time",dayTime);for(int i=0;i<3;i++)e.putInt("inventory_"+i,inventory[i]);e.apply();}
+        void resetWorld(){resetRequested=true;prefs.edit().remove("terrain").remove("blocks").remove("player_x").remove("player_z").remove("health").remove("hunger").remove("food").remove("inventory_0").remove("inventory_1").remove("inventory_2").remove("day_time").remove("world_seed").apply();}
+        void saveWorld(){if(resetRequested)return;StringBuilder data=new StringBuilder(576),savedBlocks=new StringBuilder(24*24*9);for(int z=0;z<24;z++)for(int x=0;x<24;x++){data.append((char)('0'+Math.max(1,Math.min(9,map[z][x]))));for(int y=0;y<9;y++)savedBlocks.append((char)('0'+Math.max(0,Math.min(3,blocks[z][x][y]))));}SharedPreferences.Editor e=prefs.edit().putString("terrain",data.toString()).putString("blocks",savedBlocks.toString()).putFloat("player_x",px).putFloat("player_z",pz).putInt("health",health).putInt("hunger",hunger).putInt("food",food).putFloat("day_time",dayTime);for(int i=0;i<3;i++)e.putInt("inventory_"+i,inventory[i]);e.apply();}
         void move(int x,int z,int jump){double a=Math.toRadians(yaw);float nx=(float)(x*Math.cos(a)-z*Math.sin(a))*.16f;float nz=(float)(x*Math.sin(a)+z*Math.cos(a))*.16f;float targetX=Math.max(1,Math.min(22,px+nx));float targetZ=Math.max(1,Math.min(22,pz+nz));int oldX=Math.max(0,Math.min(23,Math.round(px))),oldZ=Math.max(0,Math.min(23,Math.round(pz)));int newX=Math.max(0,Math.min(23,Math.round(targetX))),newZ=Math.max(0,Math.min(23,Math.round(targetZ)));if(Math.abs(map[newZ][newX]-map[oldZ][oldX])<=1&&vegetation[newZ][newX]==0){px=targetX;pz=targetZ;}if(jump!=0)jumpOffset=1.5f; }
         void select(int type){if(type>=0&&type<3)selected=type;}
         synchronized void eat(){if(food>0&&hunger<20){food--;hunger=Math.min(20,hunger+5);notice="Ate an apple";}else notice=food==0?"No apples left":"Hunger is full";}
