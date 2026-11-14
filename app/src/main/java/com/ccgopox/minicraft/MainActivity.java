@@ -55,6 +55,10 @@ public class MainActivity extends Activity {
         FrameLayout.LayoutParams ep = new FrameLayout.LayoutParams(112,76,Gravity.TOP|Gravity.RIGHT);
         ep.setMargins(0,22,18,0); root.addView(eat,ep);
         eat.setOnClickListener(v -> {world.eat();refreshSurvivalHud();});
+        Button craft = new Button(this); craft.setText("CRAFT");
+        FrameLayout.LayoutParams craftParams = new FrameLayout.LayoutParams(112,76,Gravity.TOP|Gravity.RIGHT);
+        craftParams.setMargins(0,0,18,108); root.addView(craft,craftParams);
+        craft.setOnClickListener(v -> {world.craft();refreshHotbar();refreshSurvivalHud();});
         hotbarButtons = new Button[3];
         String[] names = {"GRASS", "DIRT", "STONE"};
         int[] leftMargins = {0, 0, 145};
@@ -105,6 +109,7 @@ public class MainActivity extends Activity {
         int selectedType(){return renderer.selected;}
         int inventoryCount(int type){return renderer.inventoryCount(type);}
         void eat(){renderer.eat();}
+        void craft(){renderer.craft();}
         String status(){return renderer.status();}
         void saveWorld(){renderer.saveWorld();}
         private float lastX,lastY;
@@ -141,14 +146,16 @@ public class MainActivity extends Activity {
         private volatile int hunger=20;
         private int food=8;
         private int survivalTicks=0;
+        private volatile String notice="";
         void rotate(float dx,float dy){yaw+=dx;pitch=Math.max(-5,Math.min(55,pitch+dy));}
         WorldRenderer(Context context){prefs=context.getSharedPreferences("minicraft_world",Context.MODE_PRIVATE);Random r=new Random(22);for(int z=0;z<24;z++)for(int x=0;x<24;x++){map[z][x]=Math.max(2,Math.min(6,(int)(2+Math.sin(x*.4)*1.4+Math.cos(z*.3)*1.2+r.nextDouble()*1.2)));for(int y=0;y<map[z][x];y++)blocks[z][x][y]=y==map[z][x]-1?1:(y>=map[z][x]-3?2:3);}loadWorld();}
         void loadWorld(){for(int i=0;i<3;i++)inventory[i]=Math.max(0,Math.min(999,prefs.getInt("inventory_"+i,inventory[i])));String data=prefs.getString("terrain","");if(data.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=data.charAt(z*24+x);if(c>='1'&&c<='9')map[z][x]=c-'0';}}String saved=prefs.getString("blocks","");if(saved.length()==24*24*9){for(int z=0;z<24;z++)for(int x=0;x<24;x++)for(int y=0;y<9;y++){char c=saved.charAt((z*24+x)*9+y);if(c>='0'&&c<='3')blocks[z][x][y]=c-'0';}}else{String old=prefs.getString("block_types","");if(old.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=old.charAt(z*24+x);if(c>='0'&&c<='2'&&map[z][x]>0)blocks[z][x][map[z][x]-1]=c-'0'+1;}}}px=Math.max(1,Math.min(22,prefs.getFloat("player_x",12)));pz=Math.max(1,Math.min(22,prefs.getFloat("player_z",12)));health=Math.max(1,Math.min(20,prefs.getInt("health",20)));hunger=Math.max(0,Math.min(20,prefs.getInt("hunger",20)));food=Math.max(0,Math.min(99,prefs.getInt("food",8)));}
         void saveWorld(){StringBuilder data=new StringBuilder(576),savedBlocks=new StringBuilder(24*24*9);for(int z=0;z<24;z++)for(int x=0;x<24;x++){data.append((char)('0'+Math.max(1,Math.min(9,map[z][x]))));for(int y=0;y<9;y++)savedBlocks.append((char)('0'+Math.max(0,Math.min(3,blocks[z][x][y]))));}SharedPreferences.Editor e=prefs.edit().putString("terrain",data.toString()).putString("blocks",savedBlocks.toString()).putFloat("player_x",px).putFloat("player_z",pz).putInt("health",health).putInt("hunger",hunger).putInt("food",food);for(int i=0;i<3;i++)e.putInt("inventory_"+i,inventory[i]);e.apply();}
-        void move(int x,int z,int jump){double a=Math.toRadians(yaw);float nx=(float)(x*Math.cos(a)-z*Math.sin(a));float nz=(float)(x*Math.sin(a)+z*Math.cos(a));px=Math.max(1,Math.min(22,px+nx));pz=Math.max(1,Math.min(22,pz+nz));if(jump!=0)jumpOffset=1.5f; }
+        void move(int x,int z,int jump){double a=Math.toRadians(yaw);float nx=(float)(x*Math.cos(a)-z*Math.sin(a));float nz=(float)(x*Math.sin(a)+z*Math.cos(a));float targetX=Math.max(1,Math.min(22,px+nx));float targetZ=Math.max(1,Math.min(22,pz+nz));int oldX=Math.max(0,Math.min(23,Math.round(px))),oldZ=Math.max(0,Math.min(23,Math.round(pz)));int newX=Math.max(0,Math.min(23,Math.round(targetX))),newZ=Math.max(0,Math.min(23,Math.round(targetZ)));if(Math.abs(map[newZ][newX]-map[oldZ][oldX])<=1){px=targetX;pz=targetZ;}if(jump!=0)jumpOffset=1.5f; }
         void select(int type){if(type>=0&&type<3)selected=type;}
-        synchronized void eat(){if(food>0&&hunger<20){food--;hunger=Math.min(20,hunger+5);}}
-        synchronized String status(){return "♥ "+health+"/20    Hunger "+hunger+"/20    Apples "+food;}
+        synchronized void eat(){if(food>0&&hunger<20){food--;hunger=Math.min(20,hunger+5);notice="Ate an apple";}else notice=food==0?"No apples left":"Hunger is full";}
+        synchronized void craft(){if(inventory[1]>=4){inventory[1]-=4;inventory[2]=Math.min(999,inventory[2]+1);notice="Crafted 1 stone from 4 dirt";}else notice="Need 4 dirt to craft";}
+        synchronized String status(){return "♥ "+health+"/20    Hunger "+hunger+"/20    Apples "+food+(notice.length()>0?"\n"+notice:"");}
         synchronized int inventoryCount(int type){return type>=0&&type<3?inventory[type]:0;}
          synchronized void edit(boolean place){double a=Math.toRadians(yaw);int x=Math.max(0,Math.min(23,Math.round(px+(float)Math.sin(a)*2.0f)));int z=Math.max(0,Math.min(23,Math.round(pz+(float)Math.cos(a)*2.0f)));if(place){if(inventory[selected]>0&&map[z][x]<9){blocks[z][x][map[z][x]]=selected+1;map[z][x]++;inventory[selected]--;}}else if(map[z][x]>1){map[z][x]--;int id=blocks[z][x][map[z][x]];if(id>=1&&id<=3)inventory[id-1]=Math.min(999,inventory[id-1]+1);blocks[z][x][map[z][x]]=0;}}
         @Override public void onSurfaceCreated(javax.microedition.khronos.opengles.GL10 gl, javax.microedition.khronos.egl.EGLConfig c){GLES20.glClearColor(.48f,.72f,.94f,1);GLES20.glEnable(GLES20.GL_DEPTH_TEST);String vs="uniform mat4 uMVP; attribute vec3 aPos; void main(){gl_Position=uMVP*vec4(aPos,1.0);}";String fs="precision mediump float; uniform vec4 uColor; void main(){gl_FragColor=uColor;}";program=GLES20.glCreateProgram();int v=shader(GLES20.GL_VERTEX_SHADER,vs),f=shader(GLES20.GL_FRAGMENT_SHADER,fs);GLES20.glAttachShader(program,v);GLES20.glAttachShader(program,f);GLES20.glLinkProgram(program);int[] linkStatus=new int[1];GLES20.glGetProgramiv(program,GLES20.GL_LINK_STATUS,linkStatus,0);if(linkStatus[0]==0){String error=GLES20.glGetProgramInfoLog(program);GLES20.glDeleteProgram(program);throw new IllegalStateException("MiniCraft shader link failed: "+error);}GLES20.glDeleteShader(v);GLES20.glDeleteShader(f);pos=GLES20.glGetAttribLocation(program,"aPos");color=GLES20.glGetUniformLocation(program,"uColor");mvpLoc=GLES20.glGetUniformLocation(program,"uMVP");buffer=ByteBuffer.allocateDirect(108*4).order(ByteOrder.nativeOrder()).asFloatBuffer();}
