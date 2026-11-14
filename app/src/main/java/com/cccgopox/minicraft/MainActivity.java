@@ -39,13 +39,14 @@ public class MainActivity extends Activity {
         addButton(root,"PLACE",Gravity.BOTTOM|Gravity.RIGHT,58,world,4);
         hotbarButtons = new Button[3];
         String[] names = {"GRASS", "DIRT", "STONE"};
-        int[] margins = {145, 0, -145};
+        int[] leftMargins = {0, 0, 145};
+        int[] rightMargins = {145, 0, 0};
         for (int i = 0; i < 3; i++) {
             final int type = i;
             Button slot = new Button(this);
             hotbarButtons[i] = slot;
             FrameLayout.LayoutParams hp = new FrameLayout.LayoutParams(140, 70, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
-            hp.setMargins(margins[i], 0, -margins[i], 18);
+            hp.setMargins(leftMargins[i], 0, rightMargins[i], 18);
             root.addView(slot, hp);
             slot.setOnClickListener(v -> { world.select(type); refreshHotbar(); });
         }
@@ -60,7 +61,7 @@ public class MainActivity extends Activity {
         if (hotbarButtons == null || world == null) return;
         String[] names = {"GRASS", "DIRT", "STONE"};
         for (int i = 0; i < hotbarButtons.length; i++) {
-            hotbarButtons[i].setText((world.selectedType() == i ? "▶ " : "") + (i + 1) + " " + names[i] + "\\n" + world.inventoryCount(i));
+            hotbarButtons[i].setText((world.selectedType() == i ? "▶ " : "") + (i + 1) + " " + names[i] + "\n" + world.inventoryCount(i));
             hotbarButtons[i].setAlpha(world.selectedType() == i ? 1.0f : 0.72f);
         }
     }
