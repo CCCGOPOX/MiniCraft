@@ -299,7 +299,7 @@ public class MainActivity extends Activity {
                 .5f,0,-.5f, .5f,0,.5f, .5f,1,.5f,  .5f,0,-.5f, .5f,1,.5f, .5f,1,-.5f,
                 -.5f,1,-.5f, .5f,1,-.5f, .5f,1,.5f,  -.5f,1,-.5f, .5f,1,.5f, -.5f,1,.5f,
                 -.5f,0,.5f, .5f,0,.5f, .5f,0,-.5f,  -.5f,0,.5f, .5f,0,-.5f, -.5f,0,-.5f
-            };;
+            };
         void drawCube(){
             buffer.clear();buffer.put(cubeTriangles).position(0);
             GLES20.glVertexAttribPointer(pos,3,GLES20.GL_FLOAT,false,0,buffer);
