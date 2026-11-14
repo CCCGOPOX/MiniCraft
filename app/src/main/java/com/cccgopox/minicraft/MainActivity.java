@@ -67,6 +67,10 @@ public class MainActivity extends Activity {
         FrameLayout.LayoutParams craftParams = new FrameLayout.LayoutParams(112,76,Gravity.TOP|Gravity.RIGHT);
         craftParams.setMargins(0,0,18,108); root.addView(craft,craftParams);
         craft.setOnClickListener(v -> {world.craft();refreshHotbar();refreshSurvivalHud();});
+        Button hit = new Button(this); hit.setText("HIT");
+        FrameLayout.LayoutParams hitParams = new FrameLayout.LayoutParams(112,76,Gravity.TOP|Gravity.RIGHT);
+        hitParams.setMargins(0,194,18,0);root.addView(hit,hitParams);
+        hit.setOnClickListener(v->{world.attack();refreshSurvivalHud();});
         hotbarButtons = new Button[4];
         String[] names = {"GRASS", "DIRT", "STONE", "WOOD"};
         int[] leftMargins = {0, 0, 110, 330};
@@ -197,6 +201,7 @@ public class MainActivity extends Activity {
         int inventoryCount(int type){return renderer.inventoryCount(type);}
         void eat(){renderer.eat();}
         void craft(){renderer.craft();}
+        void attack(){renderer.attack();}
         String status(){return renderer.status();}
         void saveWorld(){renderer.saveWorld();}
         void resetWorld(){renderer.resetWorld();}
@@ -257,6 +262,7 @@ public class MainActivity extends Activity {
         private final float[] mobX={5f,18f,7f};
         private final float[] mobZ={6f,17f,19f};
         private final int[] mobAttack=new int[3];
+        private final int[] mobHealth={3,3,3};
         private int mobFrame=0;
         void rotate(float dx,float dy){yaw+=dx;pitch=Math.max(-5,Math.min(55,pitch+dy));}
         void zoom(float amount){cameraDistance=Math.max(8,Math.min(28,cameraDistance+amount));prefs.edit().putFloat("camera_distance",cameraDistance).apply();}
@@ -268,7 +274,8 @@ public class MainActivity extends Activity {
         void select(int type){if(type>=0&&type<4)selected=type;}
         synchronized void eat(){if(food>0&&hunger<20){food--;hunger=Math.min(20,hunger+5);notice="Ate an apple";}else notice=food==0?"No apples left":"Hunger is full";}
         synchronized void craft(){if(inventory[1]>=4){inventory[1]-=4;inventory[2]=Math.min(999,inventory[2]+1);notice="Crafted 1 stone from 4 dirt";}else notice="Need 4 dirt to craft";}
-        synchronized String status(){int x=Math.max(0,Math.min(23,Math.round(px))),z=Math.max(0,Math.min(23,Math.round(pz)));String area=biome[z][x]==1?"Desert":(biome[z][x]==2?"Snow": "Forest");String phase=Math.sin(dayTime)>0?"Day":"Night";return "♥ "+health+"/20    Hunger "+hunger+"/20    Apples "+food+"\n"+area+"  •  "+phase+"  •  Mobs: 3"+(notice.length()>0?"\n"+notice:"");}
+        synchronized void attack(){int best=-1;float bestDistance=3.1f;double a=Math.toRadians(yaw);float fx=(float)Math.sin(a),fz=(float)Math.cos(a);for(int i=0;i<3;i++){if(mobHealth[i]<=0)continue;float dx=mobX[i]-px,dz=mobZ[i]-pz;float d=(float)Math.sqrt(dx*dx+dz*dz);if(d<bestDistance&&d>0.01f&&(dx/d*fx+dz/d*fz)>.25f){best=i;bestDistance=d;}}if(best<0){notice="No mob in front of you";return;}mobHealth[best]--;notice=mobHealth[best]<=0?"Mob defeated!":"Mob hit: "+mobHealth[best]+" HP left";}
+        synchronized String status(){int x=Math.max(0,Math.min(23,Math.round(px))),z=Math.max(0,Math.min(23,Math.round(pz)));String area=biome[z][x]==1?"Desert":(biome[z][x]==2?"Snow": "Forest");String phase=Math.sin(dayTime)>0?"Day":"Night";int alive=0;for(int hp:mobHealth)if(hp>0)alive++;return "♥ "+health+"/20    Hunger "+hunger+"/20    Apples "+food+"\n"+area+"  •  "+phase+"  •  Mobs: "+alive+(notice.length()>0?"\n"+notice:"");}
         synchronized int inventoryCount(int type){return type>=0&&type<4?inventory[type]:0;}
          private int[] rayTarget(){
             double a=Math.toRadians(yaw);
@@ -321,8 +328,8 @@ public class MainActivity extends Activity {
                     Matrix.setIdentityM(model,0);Matrix.translateM(model,0,x,base+1.0f,z);Matrix.scaleM(model,0,1.0f,1.0f,1.0f);Matrix.multiplyMM(mvp,0,vp,0,model,0);GLES20.glUniformMatrix4fv(mvpLoc,1,false,mvp,0);GLES20.glUniform4f(color,.78f,.86f,.94f,1);drawCube();
                 }
             }
-            if(!paused&&++mobFrame%4==0){for(int i=0;i<3;i++){float dx=px-mobX[i],dz=pz-mobZ[i];float dist=(float)Math.sqrt(dx*dx+dz*dz);if(dist<10f&&dist>1.15f){mobX[i]+=dx/dist*.045f;mobZ[i]+=dz/dist*.045f;}else if(dist>=10f){mobX[i]+=(float)Math.sin(mobFrame*.025f+i)*.018f;mobZ[i]+=(float)Math.cos(mobFrame*.021f+i)*.018f;}mobX[i]=Math.max(1,Math.min(22,mobX[i]));mobZ[i]=Math.max(1,Math.min(22,mobZ[i]));if(dist<1.25f){if(++mobAttack[i]>=23){health=Math.max(0,health-1);mobAttack[i]=0;notice="A mob hit you!";if(health==0){health=20;hunger=16;px=12;pz=12;notice="You respawned";}}}else mobAttack[i]=0;}}
-            for(int i=0;i<3;i++){int mx=Math.max(0,Math.min(23,(int)mobX[i])),mz=Math.max(0,Math.min(23,(int)mobZ[i]));Matrix.setIdentityM(model,0);Matrix.translateM(model,0,mobX[i],map[mz][mx],mobZ[i]);Matrix.scaleM(model,0,.8f,.9f,.8f);Matrix.multiplyMM(mvp,0,vp,0,model,0);GLES20.glUniformMatrix4fv(mvpLoc,1,false,mvp,0);GLES20.glUniform4f(color,.72f,.12f,.16f,1);drawCube();}
+            if(!paused&&++mobFrame%4==0){for(int i=0;i<3;i++){if(mobHealth[i]<=0)continue;float dx=px-mobX[i],dz=pz-mobZ[i];float dist=(float)Math.sqrt(dx*dx+dz*dz);if(dist<10f&&dist>1.15f){mobX[i]+=dx/dist*.045f;mobZ[i]+=dz/dist*.045f;}else if(dist>=10f){mobX[i]+=(float)Math.sin(mobFrame*.025f+i)*.018f;mobZ[i]+=(float)Math.cos(mobFrame*.021f+i)*.018f;}mobX[i]=Math.max(1,Math.min(22,mobX[i]));mobZ[i]=Math.max(1,Math.min(22,mobZ[i]));if(dist<1.25f){if(++mobAttack[i]>=23){health=Math.max(0,health-1);mobAttack[i]=0;notice="A mob hit you!";if(health==0){health=20;hunger=16;px=12;pz=12;notice="You respawned";}}}else mobAttack[i]=0;}}
+            for(int i=0;i<3;i++){if(mobHealth[i]<=0)continue;int mx=Math.max(0,Math.min(23,(int)mobX[i])),mz=Math.max(0,Math.min(23,(int)mobZ[i]));Matrix.setIdentityM(model,0);Matrix.translateM(model,0,mobX[i],map[mz][mx],mobZ[i]);Matrix.scaleM(model,0,.8f,.9f,.8f);Matrix.multiplyMM(mvp,0,vp,0,model,0);GLES20.glUniformMatrix4fv(mvpLoc,1,false,mvp,0);GLES20.glUniform4f(color,.72f,.12f,.16f,1);drawCube();}
             Matrix.setIdentityM(model,0);Matrix.translateM(model,0,px, map[Math.max(0,Math.min(23,(int)pz))][Math.max(0,Math.min(23,(int)px))]+jumpOffset,pz);Matrix.scaleM(model,0,.55f,1.2f,.55f);Matrix.multiplyMM(mvp,0,vp,0,model,0);GLES20.glUniformMatrix4fv(mvpLoc,1,false,mvp,0);GLES20.glUniform4f(color,.12f,.25f,.85f,1);drawCube();GLES20.glDisableVertexAttribArray(pos);
         }
         private final float[] cubeTriangles={
