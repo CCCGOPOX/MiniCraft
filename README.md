@@ -1,7 +1,9 @@
-
+-------------------------------------------------------------------------------------------------------
 MiniCraft — my own game! like minecraft
 
 A 3D sandbox survival and building game inspired by Minecraft, made in Java. Explore an infinite block world, mine resources, build houses, travel to another dimension, and play with friends!
+
+-------------------------------------------------------------------------------------------------------
 
 What's inside:
 
@@ -25,6 +27,8 @@ What's inside:
 
 • Multiplayer: Open your world for friends—everyone keeps their inventory, tools, and bed spawn points even after disconnecting!
 
+-------------------------------------------------------------------------------------------------------
+
 How to play with friends:
 
 1. Download Radmin VPN and join the same network with your friend.
@@ -33,5 +37,8 @@ How to play with friends:
 
 3. Share this IP with your friend (port 25570), have them connect, and done! (Note: Everyone needs the same version of the game.)
 
+-------------------------------------------------------------------------------------------------------
 
 (I'm from Russia and my English isn't very good, sorry for any mistakes!)
+
+-------------------------------------------------------------------------------------------------------
