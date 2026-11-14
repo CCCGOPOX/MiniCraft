@@ -28,6 +28,7 @@ import java.util.Random;
 
 public class MainActivity extends Activity {
     private WorldView world;
+    private FrameLayout pauseMenu;
     private Button[] hotbarButtons;
     private TextView survivalHud;
     private final Handler controlHandler=new Handler(Looper.getMainLooper());
@@ -97,8 +98,8 @@ public class MainActivity extends Activity {
         Button pause = new Button(this); pause.setText("Ⅱ");
         FrameLayout.LayoutParams pp = new FrameLayout.LayoutParams(76,68,Gravity.TOP|Gravity.RIGHT);
         pp.setMargins(0,18,145,0); root.addView(pause,pp);
-        FrameLayout menu = new FrameLayout(this);
-        menu.setBackgroundColor(0xdd101820);
+        pauseMenu = new FrameLayout(this);
+        pauseMenu.setBackgroundColor(0xdd101820);
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
         panel.setGravity(Gravity.CENTER);
@@ -169,10 +170,10 @@ public class MainActivity extends Activity {
         panel.addView(sensitivityValue,new LinearLayout.LayoutParams(-1,-2));
         FrameLayout.LayoutParams mp = new FrameLayout.LayoutParams(-1,-1);
         ScrollView menuScroll = new ScrollView(this);menuScroll.setFillViewport(true);menuScroll.addView(panel);
-        menu.addView(menuScroll,mp);
-        root.addView(menu,new FrameLayout.LayoutParams(-1,-1));
-        play.setOnClickListener(v -> {menu.setVisibility(View.GONE);world.setPaused(false);});
-        pause.setOnClickListener(v -> {boolean show=menu.getVisibility()!=View.VISIBLE;menu.setVisibility(show?View.VISIBLE:View.GONE);world.setPaused(show);});
+        pauseMenu.addView(menuScroll,mp);
+        root.addView(pauseMenu,new FrameLayout.LayoutParams(-1,-1));
+        play.setOnClickListener(v -> {pauseMenu.setVisibility(View.GONE);world.setPaused(false);});
+        pause.setOnClickListener(v -> {boolean show=pauseMenu.getVisibility()!=View.VISIBLE;pauseMenu.setVisibility(show?View.VISIBLE:View.GONE);world.setPaused(show);});
         movementSpeed.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
             public void onProgressChanged(SeekBar bar,int value,boolean user){world.setMovementSpeed(.08f+(value/100f)*.24f);speedValue.setText(value+"%");}
             public void onStartTrackingTouch(SeekBar bar){}
@@ -193,6 +194,7 @@ public class MainActivity extends Activity {
     }
     private void playTone(int type){if(tone!=null&&world!=null&&world.soundEnabled())tone.startTone(type,90);}
     @Override protected void onDestroy(){if(tone!=null){tone.release();tone=null;}super.onDestroy();}
+    @Override public void onBackPressed(){if(pauseMenu!=null&&pauseMenu.getVisibility()!=View.VISIBLE){pauseMenu.setVisibility(View.VISIBLE);if(world!=null)world.setPaused(true);}else super.onBackPressed();}
     private void refreshSurvivalHud(){if(survivalHud!=null&&world!=null)survivalHud.setText(world.status());}
     private void refreshHotbar() {
         if (hotbarButtons == null || world == null) return;
