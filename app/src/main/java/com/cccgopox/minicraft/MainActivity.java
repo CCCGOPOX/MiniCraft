@@ -292,16 +292,16 @@ public class MainActivity extends Activity {
             for(int i=0;i<3;i++){int mx=Math.max(0,Math.min(23,(int)mobX[i])),mz=Math.max(0,Math.min(23,(int)mobZ[i]));Matrix.setIdentityM(model,0);Matrix.translateM(model,0,mobX[i],map[mz][mx],mobZ[i]);Matrix.scaleM(model,0,.8f,.9f,.8f);Matrix.multiplyMM(mvp,0,vp,0,model,0);GLES20.glUniformMatrix4fv(mvpLoc,1,false,mvp,0);GLES20.glUniform4f(color,.72f,.12f,.16f,1);drawCube();}
             Matrix.setIdentityM(model,0);Matrix.translateM(model,0,px, map[Math.max(0,Math.min(23,(int)pz))][Math.max(0,Math.min(23,(int)px))]+jumpOffset,pz);Matrix.scaleM(model,0,.55f,1.2f,.55f);Matrix.multiplyMM(mvp,0,vp,0,model,0);GLES20.glUniformMatrix4fv(mvpLoc,1,false,mvp,0);GLES20.glUniform4f(color,.12f,.25f,.85f,1);drawCube();GLES20.glDisableVertexAttribArray(pos);
         }
-        void drawCube(){
-            float[] v={
+        private final float[] cubeTriangles={
                 -.5f,0,-.5f, .5f,0,-.5f, .5f,1,-.5f,  -.5f,0,-.5f, .5f,1,-.5f, -.5f,1,-.5f,
                 .5f,0,.5f, -.5f,0,.5f, -.5f,1,.5f,  .5f,0,.5f, -.5f,1,.5f, .5f,1,.5f,
                 -.5f,0,.5f, -.5f,0,-.5f, -.5f,1,-.5f,  -.5f,0,.5f, -.5f,1,-.5f, -.5f,1,.5f,
                 .5f,0,-.5f, .5f,0,.5f, .5f,1,.5f,  .5f,0,-.5f, .5f,1,.5f, .5f,1,-.5f,
                 -.5f,1,-.5f, .5f,1,-.5f, .5f,1,.5f,  -.5f,1,-.5f, .5f,1,.5f, -.5f,1,.5f,
                 -.5f,0,.5f, .5f,0,.5f, .5f,0,-.5f,  -.5f,0,.5f, .5f,0,-.5f, -.5f,0,-.5f
-            };
-            buffer.clear();buffer.put(v).position(0);
+            };;
+        void drawCube(){
+            buffer.clear();buffer.put(cubeTriangles).position(0);
             GLES20.glVertexAttribPointer(pos,3,GLES20.GL_FLOAT,false,0,buffer);
             GLES20.glDrawArrays(GLES20.GL_TRIANGLES,0,36);
         }
