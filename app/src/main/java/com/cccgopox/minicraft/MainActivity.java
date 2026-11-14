@@ -2,6 +2,8 @@ package com.cccgopox.minicraft;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.opengl.GLSurfaceView;
@@ -24,6 +26,7 @@ public class MainActivity extends Activity {
     private WorldView world;
     private Button[] hotbarButtons;
     private TextView survivalHud;
+    private final Handler controlHandler=new Handler(Looper.getMainLooper());
     private final Runnable hudUpdater = new Runnable(){ public void run(){ if(survivalHud!=null && world!=null){survivalHud.setText(world.status());survivalHud.postDelayed(this,1000);} } };
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -156,13 +159,23 @@ public class MainActivity extends Activity {
             hotbarButtons[i].setAlpha(world.selectedType() == i ? 1.0f : 0.72f);
         }
     }
+    private void moveAction(WorldView w,int action){if(action==0)w.move(0,1,0);if(action==1)w.move(-1,0,0);if(action==2)w.move(1,0,0);}
     private void addButton(FrameLayout root,String label,int gravity,int offset,WorldView w,int action) {
         Button b=new Button(this); b.setText(label);
         FrameLayout.LayoutParams p=new FrameLayout.LayoutParams(104,88,gravity);
         if ((gravity & Gravity.LEFT)==Gravity.LEFT) p.setMargins(18+((action==1)?0:(action==2?190:90)),0,0,24);
         else p.setMargins(0,0,18+offset,24);
         root.addView(b,p);
-        b.setOnClickListener(v -> { if(action==0)w.move(0,1,0); if(action==1)w.move(-1,0,0); if(action==2)w.move(1,0,0); if(action==3){w.edit(false);refreshHotbar();} if(action==4){w.edit(true);refreshHotbar();} });
+        if(action<=2){
+            final boolean[] held={false};
+            Runnable repeat=new Runnable(){public void run(){if(!held[0])return;moveAction(w,action);controlHandler.postDelayed(this,100);}};
+            b.setOnTouchListener((v,e)->{
+                if(e.getAction()==MotionEvent.ACTION_DOWN){held[0]=true;moveAction(w,action);controlHandler.postDelayed(repeat,100);return true;}
+                if(e.getAction()==MotionEvent.ACTION_UP||e.getAction()==MotionEvent.ACTION_CANCEL){held[0]=false;controlHandler.removeCallbacks(repeat);return true;}
+                return true;
+            });
+        }else b.setOnClickListener(v -> {if(action==3){w.edit(false);refreshHotbar();refreshSurvivalHud();}if(action==4){w.edit(true);refreshHotbar();refreshSurvivalHud();}});
+
     }
     @Override protected void onPause(){super.onPause(); if(world!=null){world.saveWorld();world.onPause();}}
     @Override protected void onResume(){super.onResume(); if(world!=null)world.onResume();}
@@ -234,7 +247,7 @@ public class MainActivity extends Activity {
         WorldRenderer(Context context){prefs=context.getSharedPreferences("minicraft_world",Context.MODE_PRIVATE);sensitivity=Math.max(0.05f,Math.min(1.0f,prefs.getFloat("camera_sensitivity",0.415f)));renderDistance=Math.max(8,Math.min(24,prefs.getInt("render_distance",24)));Random r=new Random(22);for(int z=0;z<24;z++)for(int x=0;x<24;x++){map[z][x]=Math.max(2,Math.min(6,(int)(2+Math.sin(x*.4)*1.4+Math.cos(z*.3)*1.2+r.nextDouble()*1.2)));for(int y=0;y<map[z][x];y++)blocks[z][x][y]=y==map[z][x]-1?1:(y>=map[z][x]-3?2:3);}loadWorld();}
         void loadWorld(){for(int i=0;i<3;i++)inventory[i]=Math.max(0,Math.min(999,prefs.getInt("inventory_"+i,inventory[i])));String data=prefs.getString("terrain","");if(data.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=data.charAt(z*24+x);if(c>='1'&&c<='9')map[z][x]=c-'0';}}String saved=prefs.getString("blocks","");if(saved.length()==24*24*9){for(int z=0;z<24;z++)for(int x=0;x<24;x++)for(int y=0;y<9;y++){char c=saved.charAt((z*24+x)*9+y);if(c>='0'&&c<='3')blocks[z][x][y]=c-'0';}}else{String old=prefs.getString("block_types","");if(old.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=old.charAt(z*24+x);if(c>='0'&&c<='2'&&map[z][x]>0)blocks[z][x][map[z][x]-1]=c-'0'+1;}}}px=Math.max(1,Math.min(22,prefs.getFloat("player_x",12)));pz=Math.max(1,Math.min(22,prefs.getFloat("player_z",12)));health=Math.max(1,Math.min(20,prefs.getInt("health",20)));hunger=Math.max(0,Math.min(20,prefs.getInt("hunger",20)));food=Math.max(0,Math.min(99,prefs.getInt("food",8)));}
         void saveWorld(){StringBuilder data=new StringBuilder(576),savedBlocks=new StringBuilder(24*24*9);for(int z=0;z<24;z++)for(int x=0;x<24;x++){data.append((char)('0'+Math.max(1,Math.min(9,map[z][x]))));for(int y=0;y<9;y++)savedBlocks.append((char)('0'+Math.max(0,Math.min(3,blocks[z][x][y]))));}SharedPreferences.Editor e=prefs.edit().putString("terrain",data.toString()).putString("blocks",savedBlocks.toString()).putFloat("player_x",px).putFloat("player_z",pz).putInt("health",health).putInt("hunger",hunger).putInt("food",food);for(int i=0;i<3;i++)e.putInt("inventory_"+i,inventory[i]);e.apply();}
-        void move(int x,int z,int jump){double a=Math.toRadians(yaw);float nx=(float)(x*Math.cos(a)-z*Math.sin(a));float nz=(float)(x*Math.sin(a)+z*Math.cos(a));float targetX=Math.max(1,Math.min(22,px+nx));float targetZ=Math.max(1,Math.min(22,pz+nz));int oldX=Math.max(0,Math.min(23,Math.round(px))),oldZ=Math.max(0,Math.min(23,Math.round(pz)));int newX=Math.max(0,Math.min(23,Math.round(targetX))),newZ=Math.max(0,Math.min(23,Math.round(targetZ)));if(Math.abs(map[newZ][newX]-map[oldZ][oldX])<=1){px=targetX;pz=targetZ;}if(jump!=0)jumpOffset=1.5f; }
+        void move(int x,int z,int jump){double a=Math.toRadians(yaw);float nx=(float)(x*Math.cos(a)-z*Math.sin(a))*.16f;float nz=(float)(x*Math.sin(a)+z*Math.cos(a))*.16f;float targetX=Math.max(1,Math.min(22,px+nx));float targetZ=Math.max(1,Math.min(22,pz+nz));int oldX=Math.max(0,Math.min(23,Math.round(px))),oldZ=Math.max(0,Math.min(23,Math.round(pz)));int newX=Math.max(0,Math.min(23,Math.round(targetX))),newZ=Math.max(0,Math.min(23,Math.round(targetZ)));if(Math.abs(map[newZ][newX]-map[oldZ][oldX])<=1){px=targetX;pz=targetZ;}if(jump!=0)jumpOffset=1.5f; }
         void select(int type){if(type>=0&&type<3)selected=type;}
         synchronized void eat(){if(food>0&&hunger<20){food--;hunger=Math.min(20,hunger+5);notice="Ate an apple";}else notice=food==0?"No apples left":"Hunger is full";}
         synchronized void craft(){if(inventory[1]>=4){inventory[1]-=4;inventory[2]=Math.min(999,inventory[2]+1);notice="Crafted 1 stone from 4 dirt";}else notice="Need 4 dirt to craft";}
