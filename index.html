@@ -266,7 +266,7 @@ document.getElementById("downloadBtn").addEventListener("click",function(){
   if(!client||!currentUser)return;
   const username=$("profileNick").value.trim(),bio=$("profileBio").value.trim();
   if(!/^[A-Za-z0-9_]{3,20}$/.test(username)){say("Ник: 3–20 символов, латиница, цифры или _.");return}
-  const {error}=await client.from("mc_profiles").upsert({id:currentUser.id,username,bio},{onConflict:"id"});
+  const {error}=await client.from("mc_profiles").update({username,bio}).eq("id",currentUser.id);
   say(error?"Ошибка сохранения: "+error.message:"Профиль сохранён.");
  });
  $("profileTab").addEventListener("click",()=>{ $("profileView").hidden=false;$("customView").hidden=true;$("inboxView").hidden=true });
@@ -274,7 +274,7 @@ document.getElementById("downloadBtn").addEventListener("click",function(){
  $("inboxTab").addEventListener("click",async()=>{ $("profileView").hidden=true;$("customView").hidden=true;$("inboxView").hidden=false;await loadInbox() });
  $("saveAppearance").addEventListener("click",async()=>{
   const v=readAppearance();applyAppearance(v);localStorage.setItem("mc-appearance",JSON.stringify(v));localAppearance=v;
-  if(client&&currentUser){const {error}=await client.from("mc_profiles").upsert({id:currentUser.id,settings:v},{onConflict:"id"});if(error){say("Оформление сохранено только на этом устройстве: "+error.message);return}}
+  if(client&&currentUser){const {error}=await client.from("mc_profiles").update({settings:v}).eq("id",currentUser.id);if(error){say("Оформление сохранено только на этом устройстве: "+error.message);return}}
   say("Оформление сохранено.");
  });
  $("resetAppearance").addEventListener("click",()=>{const v={theme:"system",accent:"#4e9a2f",font:"Inter,system-ui,sans-serif",size:"16px"};loadAppearance(v);applyAppearance(v);localStorage.setItem("mc-appearance",JSON.stringify(v));say("Настройки оформления сброшены.")});
