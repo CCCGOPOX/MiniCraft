@@ -17,6 +17,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
+import android.widget.ScrollView;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -138,7 +139,8 @@ public class MainActivity extends Activity {
         sensitivityValue.setGravity(Gravity.CENTER);
         panel.addView(sensitivityValue,new LinearLayout.LayoutParams(-1,-2));
         FrameLayout.LayoutParams mp = new FrameLayout.LayoutParams(-1,-1);
-        menu.addView(panel,mp);
+        ScrollView menuScroll = new ScrollView(this);menuScroll.setFillViewport(true);menuScroll.addView(panel);
+        menu.addView(menuScroll,mp);
         root.addView(menu,new FrameLayout.LayoutParams(-1,-1));
         play.setOnClickListener(v -> {menu.setVisibility(View.GONE);world.setPaused(false);});
         pause.setOnClickListener(v -> {boolean show=menu.getVisibility()!=View.VISIBLE;menu.setVisibility(show?View.VISIBLE:View.GONE);world.setPaused(show);});
