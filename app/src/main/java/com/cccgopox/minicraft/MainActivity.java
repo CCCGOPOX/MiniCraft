@@ -20,6 +20,7 @@ import java.util.Random;
 
 public class MainActivity extends Activity {
     private WorldView world;
+    private Button[] hotbarButtons;
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         getWindow().getDecorView().setSystemUiVisibility(5894 | 1024 | 512);
@@ -36,14 +37,32 @@ public class MainActivity extends Activity {
         addButton(root,"▶",Gravity.BOTTOM|Gravity.LEFT,162,world,2);
         addButton(root,"BREAK",Gravity.BOTTOM|Gravity.RIGHT,120,world,3);
         addButton(root,"PLACE",Gravity.BOTTOM|Gravity.RIGHT,58,world,4);
-        Button grass=new Button(this);grass.setText("1 GRASS");FrameLayout.LayoutParams gp=new FrameLayout.LayoutParams(140,70,Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL);gp.setMargins(0,0,145,18);root.addView(grass,gp);grass.setOnClickListener(v->world.select(0));
-        Button dirt=new Button(this);dirt.setText("2 DIRT");FrameLayout.LayoutParams dp=new FrameLayout.LayoutParams(140,70,Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL);dp.setMargins(0,0,0,18);root.addView(dirt,dp);dirt.setOnClickListener(v->world.select(1));
-        Button stone=new Button(this);stone.setText("3 STONE");FrameLayout.LayoutParams sp=new FrameLayout.LayoutParams(140,70,Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL);sp.setMargins(145,0,0,18);root.addView(stone,sp);stone.setOnClickListener(v->world.select(2));
+        hotbarButtons = new Button[3];
+        String[] names = {"GRASS", "DIRT", "STONE"};
+        int[] margins = {145, 0, -145};
+        for (int i = 0; i < 3; i++) {
+            final int type = i;
+            Button slot = new Button(this);
+            hotbarButtons[i] = slot;
+            FrameLayout.LayoutParams hp = new FrameLayout.LayoutParams(140, 70, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+            hp.setMargins(margins[i], 0, -margins[i], 18);
+            root.addView(slot, hp);
+            slot.setOnClickListener(v -> { world.select(type); refreshHotbar(); });
+        }
+        refreshHotbar();
         Button jump = new Button(this); jump.setText("JUMP");
         FrameLayout.LayoutParams jp = new FrameLayout.LayoutParams(150,100,Gravity.BOTTOM|Gravity.RIGHT);
         jp.setMargins(0,0,245,24); root.addView(jump,jp);
         jump.setOnClickListener(v -> world.move(0,0,1));
         setContentView(root);
+    }
+    private void refreshHotbar() {
+        if (hotbarButtons == null || world == null) return;
+        String[] names = {"GRASS", "DIRT", "STONE"};
+        for (int i = 0; i < hotbarButtons.length; i++) {
+            hotbarButtons[i].setText((world.selectedType() == i ? "▶ " : "") + (i + 1) + " " + names[i] + "\\n" + world.inventoryCount(i));
+            hotbarButtons[i].setAlpha(world.selectedType() == i ? 1.0f : 0.72f);
+        }
     }
     private void addButton(FrameLayout root,String label,int gravity,int offset,WorldView w,int action) {
         Button b=new Button(this); b.setText(label);
@@ -51,7 +70,7 @@ public class MainActivity extends Activity {
         if ((gravity & Gravity.LEFT)==Gravity.LEFT) p.setMargins(18+((action==1)?0:(action==2?190:90)),0,0,24);
         else p.setMargins(0,0,18+offset,24);
         root.addView(b,p);
-        b.setOnClickListener(v -> { if(action==0)w.move(0,-1,0); if(action==1)w.move(-1,0,0); if(action==2)w.move(1,0,0); if(action==3)w.edit(false); if(action==4)w.edit(true); });
+        b.setOnClickListener(v -> { if(action==0)w.move(0,1,0); if(action==1)w.move(-1,0,0); if(action==2)w.move(1,0,0); if(action==3){w.edit(false);refreshHotbar();} if(action==4){w.edit(true);refreshHotbar();} });
     }
     @Override protected void onPause(){super.onPause(); if(world!=null){world.saveWorld();world.onPause();}}
     @Override protected void onResume(){super.onResume(); if(world!=null)world.onResume();}
@@ -62,6 +81,8 @@ public class MainActivity extends Activity {
         void move(int x,int z,int jump){renderer.move(x,z,jump);}
         void edit(boolean place){renderer.edit(place);}
         void select(int type){renderer.select(type);}
+        int selectedType(){return renderer.selected;}
+        int inventoryCount(int type){return renderer.inventoryCount(type);}
         void saveWorld(){renderer.saveWorld();}
         private float lastX,lastY;
         @Override public boolean onTouchEvent(MotionEvent e) {
@@ -94,13 +115,14 @@ public class MainActivity extends Activity {
         private volatile float jumpOffset=0;
         void rotate(float dx,float dy){yaw+=dx;pitch=Math.max(-5,Math.min(55,pitch+dy));}
         WorldRenderer(Context context){prefs=context.getSharedPreferences("minicraft_world",Context.MODE_PRIVATE);Random r=new Random(22);for(int z=0;z<24;z++)for(int x=0;x<24;x++)map[z][x]=(int)(2+Math.sin(x*.4)*1.4+Math.cos(z*.3)*1.2+r.nextDouble()*1.2);loadWorld();}
-        void loadWorld(){String types=prefs.getString("block_types","");if(types.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=types.charAt(z*24+x);if(c>='0'&&c<='2')blockTypes[z][x]=c-'0';}}for(int i=0;i<3;i++)inventory[i]=prefs.getInt("inventory_"+i,inventory[i]);String data=prefs.getString("terrain","");if(data.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=data.charAt(z*24+x);if(c>='1'&&c<='9')map[z][x]=c-'0';}}px=Math.max(1,Math.min(22,prefs.getFloat("player_x",12)));pz=Math.max(1,Math.min(22,prefs.getFloat("player_z",12)));}
+        void loadWorld(){String types=prefs.getString("block_types","");if(types.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=types.charAt(z*24+x);if(c>='0'&&c<='2')blockTypes[z][x]=c-'0';}}for(int i=0;i<3;i++)inventory[i]=Math.max(0,Math.min(999,prefs.getInt("inventory_"+i,inventory[i])));String data=prefs.getString("terrain","");if(data.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=data.charAt(z*24+x);if(c>='1'&&c<='9')map[z][x]=c-'0';}}px=Math.max(1,Math.min(22,prefs.getFloat("player_x",12)));pz=Math.max(1,Math.min(22,prefs.getFloat("player_z",12)));}
         void saveWorld(){StringBuilder data=new StringBuilder(576),types=new StringBuilder(576);for(int z=0;z<24;z++)for(int x=0;x<24;x++){data.append((char)('0'+Math.max(1,Math.min(9,map[z][x]))));types.append((char)('0'+Math.max(0,Math.min(2,blockTypes[z][x]))));}SharedPreferences.Editor e=prefs.edit().putString("terrain",data.toString()).putString("block_types",types.toString()).putFloat("player_x",px).putFloat("player_z",pz);for(int i=0;i<3;i++)e.putInt("inventory_"+i,inventory[i]);e.apply();}
         void move(int x,int z,int jump){double a=Math.toRadians(yaw);float nx=(float)(x*Math.cos(a)-z*Math.sin(a));float nz=(float)(x*Math.sin(a)+z*Math.cos(a));px=Math.max(1,Math.min(22,px+nx));pz=Math.max(1,Math.min(22,pz+nz));if(jump!=0)jumpOffset=1.5f; }
         void select(int type){if(type>=0&&type<3)selected=type;}
+        synchronized int inventoryCount(int type){return type>=0&&type<3?inventory[type]:0;}
          synchronized void edit(boolean place){double a=Math.toRadians(yaw);int x=Math.max(0,Math.min(23,Math.round(px+(float)Math.sin(a)*2.0f)));int z=Math.max(0,Math.min(23,Math.round(pz+(float)Math.cos(a)*2.0f)));if(place){if(inventory[selected]>0&&map[z][x]<9){map[z][x]++;blockTypes[z][x]=selected;inventory[selected]--;}}else if(map[z][x]>1){map[z][x]--;inventory[blockTypes[z][x]]=Math.min(999,inventory[blockTypes[z][x]]+1);}}
-        @Override public void onSurfaceCreated(javax.microedition.khronos.opengles.GL10 gl, javax.microedition.khronos.egl.EGLConfig c){GLES20.glClearColor(.48f,.72f,.94f,1);GLES20.glEnable(GLES20.GL_DEPTH_TEST);String vs="uniform mat4 uMVP; attribute vec3 aPos; void main(){gl_Position=uMVP*vec4(aPos,1.0);}";String fs="precision mediump float; uniform vec4 uColor; void main(){gl_FragColor=uColor;}";program=GLES20.glCreateProgram();int v=shader(GLES20.GL_VERTEX_SHADER,vs),f=shader(GLES20.GL_FRAGMENT_SHADER,fs);GLES20.glAttachShader(program,v);GLES20.glAttachShader(program,f);GLES20.glLinkProgram(program);pos=GLES20.glGetAttribLocation(program,"aPos");color=GLES20.glGetUniformLocation(program,"uColor");mvpLoc=GLES20.glGetUniformLocation(program,"uMVP");buffer=ByteBuffer.allocateDirect(108*4).order(ByteOrder.nativeOrder()).asFloatBuffer();}
-        int shader(int type,String src){int s=GLES20.glCreateShader(type);GLES20.glShaderSource(s,src);GLES20.glCompileShader(s);return s;}
+        @Override public void onSurfaceCreated(javax.microedition.khronos.opengles.GL10 gl, javax.microedition.khronos.egl.EGLConfig c){GLES20.glClearColor(.48f,.72f,.94f,1);GLES20.glEnable(GLES20.GL_DEPTH_TEST);String vs="uniform mat4 uMVP; attribute vec3 aPos; void main(){gl_Position=uMVP*vec4(aPos,1.0);}";String fs="precision mediump float; uniform vec4 uColor; void main(){gl_FragColor=uColor;}";program=GLES20.glCreateProgram();int v=shader(GLES20.GL_VERTEX_SHADER,vs),f=shader(GLES20.GL_FRAGMENT_SHADER,fs);GLES20.glAttachShader(program,v);GLES20.glAttachShader(program,f);GLES20.glLinkProgram(program);int[] linkStatus=new int[1];GLES20.glGetProgramiv(program,GLES20.GL_LINK_STATUS,linkStatus,0);if(linkStatus[0]==0){String error=GLES20.glGetProgramInfoLog(program);GLES20.glDeleteProgram(program);throw new IllegalStateException("MiniCraft shader link failed: "+error);}GLES20.glDeleteShader(v);GLES20.glDeleteShader(f);pos=GLES20.glGetAttribLocation(program,"aPos");color=GLES20.glGetUniformLocation(program,"uColor");mvpLoc=GLES20.glGetUniformLocation(program,"uMVP");buffer=ByteBuffer.allocateDirect(108*4).order(ByteOrder.nativeOrder()).asFloatBuffer();}
+        int shader(int type,String src){int s=GLES20.glCreateShader(type);GLES20.glShaderSource(s,src);GLES20.glCompileShader(s);int[] status=new int[1];GLES20.glGetShaderiv(s,GLES20.GL_COMPILE_STATUS,status,0);if(status[0]==0){String error=GLES20.glGetShaderInfoLog(s);GLES20.glDeleteShader(s);throw new IllegalStateException("MiniCraft shader compile failed: "+error);}return s;}
         @Override public void onSurfaceChanged(javax.microedition.khronos.opengles.GL10 gl,int w,int h){GLES20.glViewport(0,0,w,h);Matrix.perspectiveM(projection,0,55,(float)w/h,.1f,100f);}
         @Override public void onDrawFrame(javax.microedition.khronos.opengles.GL10 gl){jumpOffset=Math.max(0,jumpOffset-0.035f);GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT|GLES20.GL_DEPTH_BUFFER_BIT);double angle=Math.toRadians(yaw);float distance=18;float eyeX=px-(float)Math.sin(angle)*distance;float eyeZ=pz-(float)Math.cos(angle)*distance;float eyeY=10+(pitch*.18f);Matrix.setLookAtM(view,0,eyeX,eyeY,eyeZ,px,1+jumpOffset*.15f,pz,0,1,0);Matrix.multiplyMM(vp,0,projection,0,view,0);GLES20.glUseProgram(program);GLES20.glEnableVertexAttribArray(pos);buffer.position(0);GLES20.glVertexAttribPointer(pos,3,GLES20.GL_FLOAT,false,0,buffer);
             for(int z=0;z<24;z++)for(int x=0;x<24;x++){int h=map[z][x];Matrix.setIdentityM(model,0);Matrix.translateM(model,0,x,0,z);Matrix.scaleM(model,0,1,h,1);Matrix.multiplyMM(mvp,0,vp,0,model,0);GLES20.glUniformMatrix4fv(mvpLoc,1,false,mvp,0);int type=blockTypes[z][x];double a=Math.toRadians(yaw);int tx=Math.max(0,Math.min(23,Math.round(px+(float)Math.sin(a)*2.0f)));int tz=Math.max(0,Math.min(23,Math.round(pz+(float)Math.cos(a)*2.0f)));if(x==tx&&z==tz)GLES20.glUniform4f(color,1.0f,.82f,.18f,1);else if(type==0)GLES20.glUniform4f(color,x%3==0?.35f:.42f,.55f,.25f,1);else if(type==1)GLES20.glUniform4f(color,.48f,.29f,.13f,1);else GLES20.glUniform4f(color,.48f,.5f,.54f,1);drawCube();}
