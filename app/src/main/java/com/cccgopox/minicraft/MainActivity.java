@@ -39,7 +39,7 @@ public class MainActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         getWindow().getDecorView().setSystemUiVisibility(5894 | 1024 | 512);
-        tone=new ToneGenerator(AudioManager.STREAM_MUSIC,45);
+        try { tone=new ToneGenerator(AudioManager.STREAM_MUSIC,45); } catch (RuntimeException audioError) { tone=null; }
         FrameLayout root = new FrameLayout(this);
         world = new WorldView(this);
         root.addView(world);
