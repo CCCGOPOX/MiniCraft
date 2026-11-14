@@ -64,22 +64,22 @@ public class MainActivity extends Activity {
         addButton(root,"◀",Gravity.BOTTOM|Gravity.LEFT,58,world,1);
         addButton(root,"▶",Gravity.BOTTOM|Gravity.LEFT,162,world,2);
         addButton(root,"▼",Gravity.BOTTOM|Gravity.LEFT,0,world,5);
-        addButton(root,"BREAK",Gravity.BOTTOM|Gravity.RIGHT,112,world,3);
-        addButton(root,"PLACE",Gravity.BOTTOM|Gravity.RIGHT,0,world,4);
-        Button eat = new Button(this); eat.setText("EAT");
+        addButton(root,"ЛОМАТЬ",Gravity.BOTTOM|Gravity.RIGHT,112,world,3);
+        addButton(root,"СТАВИТЬ",Gravity.BOTTOM|Gravity.RIGHT,0,world,4);
+        Button eat = new Button(this); eat.setText("ЕСТЬ");
         FrameLayout.LayoutParams ep = new FrameLayout.LayoutParams(dp(112),dp(76),Gravity.TOP|Gravity.RIGHT);
         ep.setMargins(0,dp(22),dp(18),0); root.addView(eat,ep);
         eat.setOnClickListener(v -> {world.eat();playTone(ToneGenerator.TONE_PROP_BEEP);refreshSurvivalHud();});
-        Button craft = new Button(this); craft.setText("CRAFT");
+        Button craft = new Button(this); craft.setText("КРАФТ");
         FrameLayout.LayoutParams craftParams = new FrameLayout.LayoutParams(112,76,Gravity.TOP|Gravity.RIGHT);
         craftParams.setMargins(0,0,dp(18),dp(108)); root.addView(craft,craftParams);
         craft.setOnClickListener(v -> {world.craft();playTone(ToneGenerator.TONE_PROP_ACK);refreshHotbar();refreshSurvivalHud();});
-        Button hit = new Button(this); hit.setText("HIT");
+        Button hit = new Button(this); hit.setText("УДАР");
         FrameLayout.LayoutParams hitParams = new FrameLayout.LayoutParams(112,76,Gravity.TOP|Gravity.RIGHT);
         hitParams.setMargins(0,dp(194),dp(18),0);root.addView(hit,hitParams);
         hit.setOnClickListener(v->{world.attack();playTone(ToneGenerator.TONE_PROP_NACK);refreshSurvivalHud();});
         hotbarButtons = new Button[9];
-        String[] names = {"GRASS","DIRT","STONE","PLANKS","LEAVES","LOG","BEDROCK","SAND","SNOW"};
+        String[] names = {"ТРАВА","ЗЕМЛЯ","КАМЕНЬ","ДОСКИ","ЛИСТВА","БРЕВНО","БЕДРОК","ПЕСОК","СНЕГ"};
         for (int i = 0; i < 9; i++) {
             final int type = i;
             Button slot = new Button(this);
@@ -91,7 +91,7 @@ public class MainActivity extends Activity {
             slot.setOnClickListener(v -> { world.select(type); refreshHotbar(); });
         }
         refreshHotbar();
-        Button jump = new Button(this); jump.setText("JUMP");
+        Button jump = new Button(this); jump.setText("ПРЫЖОК");
         FrameLayout.LayoutParams jp = new FrameLayout.LayoutParams(dp(150),dp(100),Gravity.BOTTOM|Gravity.RIGHT);
         jp.setMargins(0,0,dp(245),dp(24)); root.addView(jump,jp);
         jump.setOnClickListener(v -> world.move(0,0,1));
@@ -201,7 +201,7 @@ public class MainActivity extends Activity {
         if (hotbarButtons == null || world == null) return;
         String[] names = {"GRASS","DIRT","STONE","PLANKS","LEAVES","LOG","BEDROCK","SAND","SNOW"};
         for (int i = 0; i < hotbarButtons.length; i++) {
-            hotbarButtons[i].setText((world.selectedType() == i ? "▶ " : "") + (i + 1) + " " + names[i] + "\n" + world.inventoryCount(i));
+            hotbarButtons[i].setTextSize(8.5f);hotbarButtons[i].setText((world.selectedType() == i ? "▶ " : "") + names[i] + "\n" + world.inventoryCount(i));
             hotbarButtons[i].setAlpha(world.selectedType() == i ? 1.0f : 0.72f);
         }
     }
@@ -370,7 +370,7 @@ public class MainActivity extends Activity {
         synchronized void eat(){if(food>0&&(hunger<20||health<20)){food--;hunger=Math.min(20,hunger+5);health=Math.min(20,health+2);notice="Ate an apple (+5 hunger, +2 health)";}else notice=food==0?"No apples left":"Already full";}
         synchronized void craft(){if(inventory[1]>=4){inventory[1]-=4;inventory[2]=Math.min(999,inventory[2]+1);notice="Crafted 1 stone from 4 dirt";}else notice="Need 4 dirt to craft";}
         synchronized void attack(){int best=-1;float bestDistance=3.1f;double a=Math.toRadians(yaw);float fx=(float)Math.sin(a),fz=(float)Math.cos(a);for(int i=0;i<3;i++){if(mobHealth[i]<=0)continue;float dx=mobX[i]-px,dz=mobZ[i]-pz;float d=(float)Math.sqrt(dx*dx+dz*dz);if(d<bestDistance&&d>0.01f&&(dx/d*fx+dz/d*fz)>.25f){best=i;bestDistance=d;}}if(best<0){notice="No mob in front of you";return;}mobHealth[best]--;notice=mobHealth[best]<=0?"Mob defeated!":"Mob hit: "+mobHealth[best]+" HP left";}
-        synchronized String status(){int x=Math.max(0,Math.min(WORLD_EDGE,Math.round(px))),z=Math.max(0,Math.min(WORLD_EDGE,Math.round(pz)));String area=biome[z][x]==1?"Desert":(biome[z][x]==2?"Snow": "Forest");String phase=Math.sin(dayTime)>0?"Day":"Night";int alive=0;for(int hp:mobHealth)if(hp>0)alive++;return "♥ "+health+"/20    Hunger "+hunger+"/20    Apples "+food+"\n"+area+"  •  "+phase+"  •  Mobs: "+alive+(notice.length()>0?"\n"+notice:"");}
+        synchronized String status(){int x=Math.max(0,Math.min(WORLD_EDGE,Math.round(px))),z=Math.max(0,Math.min(WORLD_EDGE,Math.round(pz)));String area=biome[z][x]==1?"Пустыня":(biome[z][x]==2?"Снежный лес":"Лес");String phase=Math.sin(dayTime)>0?"День":"Ночь";int alive=0;for(int hp:mobHealth)if(hp>0)alive++;return "♥ "+health+"/20    Сытость "+hunger+"/20    Яблоки "+food+"\n"+area+"  •  "+phase+"  •  Мобы: "+alive+(notice.length()>0?"\n"+notice:"");}
         synchronized int inventoryCount(int type){return type>=0&&type<inventory.length?inventory[type]:0;}
          private int[] rayTarget(){
             double a=Math.toRadians(yaw);
