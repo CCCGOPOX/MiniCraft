@@ -5,5 +5,5 @@
 */
 window.MC_SUPABASE_CONFIG = {
   url: "https://cqjfxkaslsdpgidtwqhw.supabase.co",
-  anonKey: "YOUR_SUPABASE_ANON_PUBLIC_KEY"
+  anonKey: "sb_publishable_Oq9iQxgKQLsF1v-FNE6duA_vbb15Tck"
 };
