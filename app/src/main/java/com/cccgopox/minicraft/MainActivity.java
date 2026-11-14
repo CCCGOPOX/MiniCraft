@@ -44,11 +44,11 @@ public class MainActivity extends Activity {
         root.addView(world);
         TextView title = new TextView(this);
         title.setText("MiniCraft 0.3.0  •  Android");
-        title.setTextColor(0xffffffff); title.setTextSize(16); title.setPadding(18,12,18,12);
+        title.setTextColor(0xffffffff); title.setTextSize(16); title.setPadding(dp(18),dp(12),dp(18),dp(12));
         FrameLayout.LayoutParams tp = new FrameLayout.LayoutParams(-2,-2,Gravity.TOP|Gravity.CENTER_HORIZONTAL);
         root.addView(title,tp);
         survivalHud = new TextView(this);
-        survivalHud.setTextColor(0xffffffff); survivalHud.setTextSize(16); survivalHud.setPadding(16,10,16,10); survivalHud.setShadowLayer(3,0,0,0xff000000);
+        survivalHud.setTextColor(0xffffffff); survivalHud.setTextSize(16); survivalHud.setPadding(dp(16),dp(10),dp(16),dp(10)); survivalHud.setShadowLayer(3,0,0,0xff000000);
         FrameLayout.LayoutParams sp = new FrameLayout.LayoutParams(-2,-2,Gravity.TOP|Gravity.LEFT);
         sp.setMargins(12,48,0,0); root.addView(survivalHud,sp);
         TextView crosshair = new TextView(this);
@@ -57,7 +57,7 @@ public class MainActivity extends Activity {
         crosshair.setTextSize(26);
         crosshair.setGravity(Gravity.CENTER);
         crosshair.setShadowLayer(3, 0, 0, 0xff000000);
-        FrameLayout.LayoutParams cp = new FrameLayout.LayoutParams(48,48,Gravity.CENTER);
+        FrameLayout.LayoutParams cp = new FrameLayout.LayoutParams(dp(48),dp(48),Gravity.CENTER);
         root.addView(crosshair,cp);
         addButton(root,"▲",Gravity.BOTTOM|Gravity.LEFT,110,world,0);
         addButton(root,"◀",Gravity.BOTTOM|Gravity.LEFT,58,world,1);
@@ -66,16 +66,16 @@ public class MainActivity extends Activity {
         addButton(root,"BREAK",Gravity.BOTTOM|Gravity.RIGHT,112,world,3);
         addButton(root,"PLACE",Gravity.BOTTOM|Gravity.RIGHT,0,world,4);
         Button eat = new Button(this); eat.setText("EAT");
-        FrameLayout.LayoutParams ep = new FrameLayout.LayoutParams(112,76,Gravity.TOP|Gravity.RIGHT);
-        ep.setMargins(0,22,18,0); root.addView(eat,ep);
+        FrameLayout.LayoutParams ep = new FrameLayout.LayoutParams(dp(112),dp(76),Gravity.TOP|Gravity.RIGHT);
+        ep.setMargins(0,dp(22),dp(18),0); root.addView(eat,ep);
         eat.setOnClickListener(v -> {world.eat();playTone(ToneGenerator.TONE_PROP_BEEP);refreshSurvivalHud();});
         Button craft = new Button(this); craft.setText("CRAFT");
         FrameLayout.LayoutParams craftParams = new FrameLayout.LayoutParams(112,76,Gravity.TOP|Gravity.RIGHT);
-        craftParams.setMargins(0,0,18,108); root.addView(craft,craftParams);
+        craftParams.setMargins(0,0,dp(18),dp(108)); root.addView(craft,craftParams);
         craft.setOnClickListener(v -> {world.craft();playTone(ToneGenerator.TONE_PROP_ACK);refreshHotbar();refreshSurvivalHud();});
         Button hit = new Button(this); hit.setText("HIT");
         FrameLayout.LayoutParams hitParams = new FrameLayout.LayoutParams(112,76,Gravity.TOP|Gravity.RIGHT);
-        hitParams.setMargins(0,194,18,0);root.addView(hit,hitParams);
+        hitParams.setMargins(0,dp(194),dp(18),0);root.addView(hit,hitParams);
         hit.setOnClickListener(v->{world.attack();playTone(ToneGenerator.TONE_PROP_NACK);refreshSurvivalHud();});
         hotbarButtons = new Button[4];
         String[] names = {"GRASS", "DIRT", "STONE", "WOOD"};
@@ -85,25 +85,25 @@ public class MainActivity extends Activity {
             final int type = i;
             Button slot = new Button(this);
             hotbarButtons[i] = slot;
-            FrameLayout.LayoutParams hp = new FrameLayout.LayoutParams(110, 70, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
-            hp.setMargins(leftMargins[i], 0, rightMargins[i], 125);
+            FrameLayout.LayoutParams hp = new FrameLayout.LayoutParams(dp(110), dp(70), Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+            hp.setMargins(dp(leftMargins[i]), 0, dp(rightMargins[i]), dp(125));
             root.addView(slot, hp);
             slot.setOnClickListener(v -> { world.select(type); refreshHotbar(); });
         }
         refreshHotbar();
         Button jump = new Button(this); jump.setText("JUMP");
-        FrameLayout.LayoutParams jp = new FrameLayout.LayoutParams(150,100,Gravity.BOTTOM|Gravity.RIGHT);
-        jp.setMargins(0,0,245,24); root.addView(jump,jp);
+        FrameLayout.LayoutParams jp = new FrameLayout.LayoutParams(dp(150),dp(100),Gravity.BOTTOM|Gravity.RIGHT);
+        jp.setMargins(0,0,dp(245),dp(24)); root.addView(jump,jp);
         jump.setOnClickListener(v -> world.move(0,0,1));
         Button pause = new Button(this); pause.setText("Ⅱ");
-        FrameLayout.LayoutParams pp = new FrameLayout.LayoutParams(76,68,Gravity.TOP|Gravity.RIGHT);
-        pp.setMargins(0,18,145,0); root.addView(pause,pp);
+        FrameLayout.LayoutParams pp = new FrameLayout.LayoutParams(dp(76),dp(68),Gravity.TOP|Gravity.RIGHT);
+        pp.setMargins(0,dp(18),dp(145),0); root.addView(pause,pp);
         pauseMenu = new FrameLayout(this);
         pauseMenu.setBackgroundColor(0xdd101820);
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
         panel.setGravity(Gravity.CENTER);
-        panel.setPadding(28,24,28,24);
+        panel.setPadding(dp(28),dp(24),dp(28),dp(24));
         TextView menuTitle = new TextView(this);
         menuTitle.setText("MINICRAFT");
         menuTitle.setTextColor(0xffffffff);
@@ -123,9 +123,9 @@ public class MainActivity extends Activity {
         panel.addView(soundSwitch,new LinearLayout.LayoutParams(-1,-2));
         soundSwitch.setOnCheckedChangeListener((button,checked)->world.setSoundEnabled(checked));
         Button play = new Button(this); play.setText("ИГРАТЬ / ПРОДОЛЖИТЬ");
-        panel.addView(play,new LinearLayout.LayoutParams(280,64));
+        panel.addView(play,new LinearLayout.LayoutParams(dp(280),dp(64)));
         Button newWorld = new Button(this); newWorld.setText("СОЗДАТЬ НОВЫЙ МИР");
-        panel.addView(newWorld,new LinearLayout.LayoutParams(280,56));
+        panel.addView(newWorld,new LinearLayout.LayoutParams(dp(280),dp(56)));
         newWorld.setOnClickListener(v->{world.resetWorld();recreate();});
         TextView settingsTitle = new TextView(this);
         settingsTitle.setText("ЧУВСТВИТЕЛЬНОСТЬ КАМЕРЫ");
@@ -134,7 +134,7 @@ public class MainActivity extends Activity {
         panel.addView(settingsTitle,new LinearLayout.LayoutParams(-1,-2));
         SeekBar sensitivity = new SeekBar(this);
         sensitivity.setMax(100); sensitivity.setProgress(world.sensitivityPercent());
-        panel.addView(sensitivity,new LinearLayout.LayoutParams(280,-2));
+        panel.addView(sensitivity,new LinearLayout.LayoutParams(dp(280),-2));
         TextView speedTitle = new TextView(this);
         speedTitle.setText("СКОРОСТЬ ДВИЖЕНИЯ");
         speedTitle.setTextColor(0xffffffff);
@@ -192,6 +192,7 @@ public class MainActivity extends Activity {
         setContentView(root);
         refreshSurvivalHud(); survivalHud.postDelayed(hudUpdater,1000);controlHandler.postDelayed(autosaveUpdater,10000);
     }
+    private int dp(float value){return (int)(value*getResources().getDisplayMetrics().density+0.5f);}
     private void playTone(int type){if(tone!=null&&world!=null&&world.soundEnabled())tone.startTone(type,90);}
     @Override protected void onDestroy(){if(tone!=null){tone.release();tone=null;}super.onDestroy();}
     @Override public void onBackPressed(){if(pauseMenu!=null&&pauseMenu.getVisibility()!=View.VISIBLE){pauseMenu.setVisibility(View.VISIBLE);if(world!=null)world.setPaused(true);}else super.onBackPressed();}
@@ -208,9 +209,9 @@ public class MainActivity extends Activity {
     private void moveAction(WorldView w,int action){if(action==0)w.move(0,1,0);if(action==1)w.move(-1,0,0);if(action==2)w.move(1,0,0);if(action==5)w.move(0,-1,0);}
     private void addButton(FrameLayout root,String label,int gravity,int offset,WorldView w,int action) {
         Button b=new Button(this); b.setText(label);
-        FrameLayout.LayoutParams p=new FrameLayout.LayoutParams(104,88,gravity);
-        if ((gravity & Gravity.LEFT)==Gravity.LEFT) {if(action==0)p.setMargins(108,0,0,120);else if(action==5)p.setMargins(108,0,0,24);else p.setMargins(18+((action==1)?0:(action==2?190:90)),0,0,24);}
-        else p.setMargins(0,0,18+offset,24);
+        FrameLayout.LayoutParams p=new FrameLayout.LayoutParams(dp(104),dp(88),gravity);
+        if ((gravity & Gravity.LEFT)==Gravity.LEFT) {if(action==0)p.setMargins(dp(108),0,0,dp(120));else if(action==5)p.setMargins(dp(108),0,0,dp(24));else p.setMargins(dp(18+((action==1)?0:(action==2?190:90))),0,0,dp(24));}
+        else p.setMargins(0,0,dp(18+offset),dp(24));
         root.addView(b,p);
         if(action<=2||action==5){
             final boolean[] held={false};
