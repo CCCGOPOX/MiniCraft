@@ -123,6 +123,20 @@ public class MainActivity extends Activity {
         SeekBar sensitivity = new SeekBar(this);
         sensitivity.setMax(100); sensitivity.setProgress(world.sensitivityPercent());
         panel.addView(sensitivity,new LinearLayout.LayoutParams(280,-2));
+        TextView speedTitle = new TextView(this);
+        speedTitle.setText("СКОРОСТЬ ДВИЖЕНИЯ");
+        speedTitle.setTextColor(0xffffffff);
+        speedTitle.setGravity(Gravity.CENTER);
+        panel.addView(speedTitle,new LinearLayout.LayoutParams(-1,-2));
+        SeekBar movementSpeed = new SeekBar(this);
+        movementSpeed.setMax(100);
+        movementSpeed.setProgress(world.movementSpeedPercent());
+        panel.addView(movementSpeed,new LinearLayout.LayoutParams(280,-2));
+        TextView speedValue = new TextView(this);
+        speedValue.setText(world.movementSpeedPercent()+"%");
+        speedValue.setTextColor(0xffffffff);
+        speedValue.setGravity(Gravity.CENTER);
+        panel.addView(speedValue,new LinearLayout.LayoutParams(-1,-2));
         TextView distanceTitle = new TextView(this);
         distanceTitle.setText("ДАЛЬНОСТЬ ПРОРИСОВКИ");
         distanceTitle.setTextColor(0xffffffff);
@@ -148,6 +162,11 @@ public class MainActivity extends Activity {
         root.addView(menu,new FrameLayout.LayoutParams(-1,-1));
         play.setOnClickListener(v -> {menu.setVisibility(View.GONE);world.setPaused(false);});
         pause.setOnClickListener(v -> {boolean show=menu.getVisibility()!=View.VISIBLE;menu.setVisibility(show?View.VISIBLE:View.GONE);world.setPaused(show);});
+        movementSpeed.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
+            public void onProgressChanged(SeekBar bar,int value,boolean user){world.setMovementSpeed(.08f+(value/100f)*.24f);speedValue.setText(value+"%");}
+            public void onStartTrackingTouch(SeekBar bar){}
+            public void onStopTrackingTouch(SeekBar bar){}
+        });
         renderDistance.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
             public void onProgressChanged(SeekBar bar,int value,boolean user){int d=value+8;world.setRenderDistance(d);distanceValue.setText(d+" БЛОКОВ");}
             public void onStartTrackingTouch(SeekBar bar){}
@@ -208,6 +227,8 @@ public class MainActivity extends Activity {
         void setSensitivity(float value){renderer.setSensitivity(value);}
         void setRenderDistance(int value){renderer.setRenderDistance(value);}
         int renderDistance(){return renderer.renderDistance();}
+        void setMovementSpeed(float value){renderer.setMovementSpeed(value);}
+        int movementSpeedPercent(){return renderer.movementSpeedPercent();}
         void setPaused(boolean value){renderer.paused=value;}
         int sensitivityPercent(){return renderer.sensitivityPercent();}
         private float lastX,lastY,lastPinchDistance;
@@ -246,9 +267,12 @@ public class MainActivity extends Activity {
         private volatile float cameraDistance=18;
         private volatile float sensitivity=0.415f;
         private volatile int renderDistance=12;
+        private volatile float movementSpeed=.16f;
         void setSensitivity(float value){sensitivity=Math.max(0.05f,Math.min(1.0f,value));prefs.edit().putFloat("camera_sensitivity",sensitivity).apply();}
         int sensitivityPercent(){return Math.max(0,Math.min(100,Math.round((sensitivity-0.10f)/0.90f*100f)));}
         void setRenderDistance(int value){renderDistance=Math.max(8,Math.min(24,value));prefs.edit().putInt("render_distance",renderDistance).apply();}
+        void setMovementSpeed(float value){movementSpeed=Math.max(.08f,Math.min(.32f,value));prefs.edit().putFloat("movement_speed",movementSpeed).apply();}
+        int movementSpeedPercent(){return Math.max(0,Math.min(100,Math.round((movementSpeed-.08f)/.24f*100f)));}
         int renderDistance(){return renderDistance;}
         private volatile boolean paused=true;
         private volatile boolean resetRequested=false;
@@ -266,11 +290,11 @@ public class MainActivity extends Activity {
         private int mobFrame=0;
         void rotate(float dx,float dy){yaw+=dx;pitch=Math.max(-5,Math.min(55,pitch+dy));}
         void zoom(float amount){cameraDistance=Math.max(8,Math.min(28,cameraDistance+amount));prefs.edit().putFloat("camera_distance",cameraDistance).apply();}
-        WorldRenderer(Context context){prefs=context.getSharedPreferences("minicraft_world",Context.MODE_PRIVATE);sensitivity=Math.max(0.05f,Math.min(1.0f,prefs.getFloat("camera_sensitivity",0.415f)));renderDistance=Math.max(8,Math.min(24,prefs.getInt("render_distance",12)));cameraDistance=Math.max(8,Math.min(28,prefs.getFloat("camera_distance",18f)));dayTime=prefs.getFloat("day_time",0f);long seed=prefs.getLong("world_seed",System.currentTimeMillis());prefs.edit().putLong("world_seed",seed).apply();Random r=new Random(seed);for(int z=0;z<24;z++)for(int x=0;x<24;x++){float climate=(float)(Math.sin(x*.19)+Math.cos(z*.16)+Math.sin((x+z)*.11));biome[z][x]=climate>1.0f?1:(climate<-.8f?2:0);map[z][x]=Math.max(2,Math.min(6,(int)(2+Math.sin(x*.4)*1.4+Math.cos(z*.3)*1.2+r.nextDouble()*1.2)));for(int y=0;y<map[z][x];y++)blocks[z][x][y]=y==map[z][x]-1?1:(y>=map[z][x]-3?2:3);if((x-12)*(x-12)+(z-12)*(z-12)>12){if(biome[z][x]==0&&r.nextFloat()<.075f)vegetation[z][x]=1;else if(biome[z][x]==1&&r.nextFloat()<.025f)vegetation[z][x]=2;else if(biome[z][x]==2&&r.nextFloat()<.055f)vegetation[z][x]=3;}}loadWorld();}
+        WorldRenderer(Context context){prefs=context.getSharedPreferences("minicraft_world",Context.MODE_PRIVATE);sensitivity=Math.max(0.05f,Math.min(1.0f,prefs.getFloat("camera_sensitivity",0.415f)));renderDistance=Math.max(8,Math.min(24,prefs.getInt("render_distance",12)));movementSpeed=Math.max(.08f,Math.min(.32f,prefs.getFloat("movement_speed",.16f)));cameraDistance=Math.max(8,Math.min(28,prefs.getFloat("camera_distance",18f)));dayTime=prefs.getFloat("day_time",0f);long seed=prefs.getLong("world_seed",System.currentTimeMillis());prefs.edit().putLong("world_seed",seed).apply();Random r=new Random(seed);for(int z=0;z<24;z++)for(int x=0;x<24;x++){float climate=(float)(Math.sin(x*.19)+Math.cos(z*.16)+Math.sin((x+z)*.11));biome[z][x]=climate>1.0f?1:(climate<-.8f?2:0);map[z][x]=Math.max(2,Math.min(6,(int)(2+Math.sin(x*.4)*1.4+Math.cos(z*.3)*1.2+r.nextDouble()*1.2)));for(int y=0;y<map[z][x];y++)blocks[z][x][y]=y==map[z][x]-1?1:(y>=map[z][x]-3?2:3);if((x-12)*(x-12)+(z-12)*(z-12)>12){if(biome[z][x]==0&&r.nextFloat()<.075f)vegetation[z][x]=1;else if(biome[z][x]==1&&r.nextFloat()<.025f)vegetation[z][x]=2;else if(biome[z][x]==2&&r.nextFloat()<.055f)vegetation[z][x]=3;}}loadWorld();}
         void loadWorld(){for(int i=0;i<4;i++)inventory[i]=Math.max(0,Math.min(999,prefs.getInt("inventory_"+i,inventory[i])));String data=prefs.getString("terrain","");if(data.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=data.charAt(z*24+x);if(c>='1'&&c<='9')map[z][x]=c-'0';}}String saved=prefs.getString("blocks","");if(saved.length()==24*24*9){for(int z=0;z<24;z++)for(int x=0;x<24;x++)for(int y=0;y<9;y++){char c=saved.charAt((z*24+x)*9+y);if(c>='0'&&c<='4')blocks[z][x][y]=c-'0';}}else{String old=prefs.getString("block_types","");if(old.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=old.charAt(z*24+x);if(c>='0'&&c<='2'&&map[z][x]>0)blocks[z][x][map[z][x]-1]=c-'0'+1;}}}px=Math.max(1,Math.min(22,prefs.getFloat("player_x",12)));pz=Math.max(1,Math.min(22,prefs.getFloat("player_z",12)));health=Math.max(1,Math.min(20,prefs.getInt("health",20)));hunger=Math.max(0,Math.min(20,prefs.getInt("hunger",20)));food=Math.max(0,Math.min(99,prefs.getInt("food",8)));String plants=prefs.getString("vegetation","");if(plants.length()==576)for(int z=0;z<24;z++)for(int x=0;x<24;x++){char p=plants.charAt(z*24+x);if(p>='0'&&p<='3')vegetation[z][x]=p-'0';}}
         void resetWorld(){resetRequested=true;prefs.edit().remove("terrain").remove("blocks").remove("player_x").remove("player_z").remove("health").remove("hunger").remove("food").remove("inventory_0").remove("inventory_1").remove("inventory_2").remove("inventory_3").remove("vegetation").remove("day_time").remove("world_seed").apply();}
         void saveWorld(){if(resetRequested)return;StringBuilder data=new StringBuilder(576),savedBlocks=new StringBuilder(24*24*9),plants=new StringBuilder(576);for(int z=0;z<24;z++)for(int x=0;x<24;x++){data.append((char)('0'+Math.max(1,Math.min(9,map[z][x]))));for(int y=0;y<9;y++)savedBlocks.append((char)('0'+Math.max(0,Math.min(4,blocks[z][x][y]))));plants.append((char)('0'+vegetation[z][x]));}SharedPreferences.Editor e=prefs.edit().putString("terrain",data.toString()).putString("blocks",savedBlocks.toString()).putString("vegetation",plants.toString()).putFloat("player_x",px).putFloat("player_z",pz).putInt("health",health).putInt("hunger",hunger).putInt("food",food).putFloat("day_time",dayTime);for(int i=0;i<4;i++)e.putInt("inventory_"+i,inventory[i]);e.apply();}
-        void move(int x,int z,int jump){double a=Math.toRadians(yaw);float nx=(float)(x*Math.cos(a)-z*Math.sin(a))*.16f;float nz=(float)(x*Math.sin(a)+z*Math.cos(a))*.16f;float targetX=Math.max(1,Math.min(22,px+nx));float targetZ=Math.max(1,Math.min(22,pz+nz));int oldX=Math.max(0,Math.min(23,Math.round(px))),oldZ=Math.max(0,Math.min(23,Math.round(pz)));int newX=Math.max(0,Math.min(23,Math.round(targetX))),newZ=Math.max(0,Math.min(23,Math.round(targetZ)));if(Math.abs(map[newZ][newX]-map[oldZ][oldX])<=1&&vegetation[newZ][newX]==0){px=targetX;pz=targetZ;}if(jump!=0)jumpOffset=1.5f; }
+        void move(int x,int z,int jump){double a=Math.toRadians(yaw);float nx=(float)(x*Math.cos(a)-z*Math.sin(a))*movementSpeed;float nz=(float)(x*Math.sin(a)+z*Math.cos(a))*movementSpeed;float targetX=Math.max(1,Math.min(22,px+nx));float targetZ=Math.max(1,Math.min(22,pz+nz));int oldX=Math.max(0,Math.min(23,Math.round(px))),oldZ=Math.max(0,Math.min(23,Math.round(pz)));int newX=Math.max(0,Math.min(23,Math.round(targetX))),newZ=Math.max(0,Math.min(23,Math.round(targetZ)));if(Math.abs(map[newZ][newX]-map[oldZ][oldX])<=1&&vegetation[newZ][newX]==0){px=targetX;pz=targetZ;}if(jump!=0)jumpOffset=1.5f; }
         void select(int type){if(type>=0&&type<4)selected=type;}
         synchronized void eat(){if(food>0&&hunger<20){food--;hunger=Math.min(20,hunger+5);notice="Ate an apple";}else notice=food==0?"No apples left":"Hunger is full";}
         synchronized void craft(){if(inventory[1]>=4){inventory[1]-=4;inventory[2]=Math.min(999,inventory[2]+1);notice="Crafted 1 stone from 4 dirt";}else notice="Need 4 dirt to craft";}
