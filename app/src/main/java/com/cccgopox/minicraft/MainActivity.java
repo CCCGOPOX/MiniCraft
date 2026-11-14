@@ -240,7 +240,7 @@ public class MainActivity extends Activity {
         synchronized int inventoryCount(int type){return type>=0&&type<3?inventory[type]:0;}
          private int[] rayTarget(){
             double a=Math.toRadians(yaw);
-            int lastX=-1,lastZ=-1;
+            int lastX=Math.round(px),lastZ=Math.round(pz);
             for(float d=0.65f;d<=5.0f;d+=0.08f){
                 int x=Math.max(0,Math.min(23,Math.round(px+(float)Math.sin(a)*d)));
                 int z=Math.max(0,Math.min(23,Math.round(pz+(float)Math.cos(a)*d)));
