@@ -13,6 +13,8 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -77,6 +79,52 @@ public class MainActivity extends Activity {
         FrameLayout.LayoutParams jp = new FrameLayout.LayoutParams(150,100,Gravity.BOTTOM|Gravity.RIGHT);
         jp.setMargins(0,0,245,24); root.addView(jump,jp);
         jump.setOnClickListener(v -> world.move(0,0,1));
+        Button pause = new Button(this); pause.setText("Ⅱ");
+        FrameLayout.LayoutParams pp = new FrameLayout.LayoutParams(76,68,Gravity.TOP|Gravity.RIGHT);
+        pp.setMargins(0,18,145,0); root.addView(pause,pp);
+        FrameLayout menu = new FrameLayout(this);
+        menu.setBackgroundColor(0xdd101820);
+        LinearLayout panel = new LinearLayout(this);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setGravity(Gravity.CENTER);
+        panel.setPadding(28,24,28,24);
+        TextView menuTitle = new TextView(this);
+        menuTitle.setText("MINICRAFT");
+        menuTitle.setTextColor(0xffffffff);
+        menuTitle.setTextSize(32);
+        menuTitle.setGravity(Gravity.CENTER);
+        panel.addView(menuTitle,new LinearLayout.LayoutParams(-1,-2));
+        TextView subtitle = new TextView(this);
+        subtitle.setText("ANDROID EDITION");
+        subtitle.setTextColor(0xffa8c7dc);
+        subtitle.setTextSize(14);
+        subtitle.setGravity(Gravity.CENTER);
+        panel.addView(subtitle,new LinearLayout.LayoutParams(-1,-2));
+        Button play = new Button(this); play.setText("ИГРАТЬ / ПРОДОЛЖИТЬ");
+        panel.addView(play,new LinearLayout.LayoutParams(280,64));
+        TextView settingsTitle = new TextView(this);
+        settingsTitle.setText("ЧУВСТВИТЕЛЬНОСТЬ КАМЕРЫ");
+        settingsTitle.setTextColor(0xffffffff);
+        settingsTitle.setGravity(Gravity.CENTER);
+        panel.addView(settingsTitle,new LinearLayout.LayoutParams(-1,-2));
+        SeekBar sensitivity = new SeekBar(this);
+        sensitivity.setMax(100); sensitivity.setProgress(35);
+        panel.addView(sensitivity,new LinearLayout.LayoutParams(280,-2));
+        TextView sensitivityValue = new TextView(this);
+        sensitivityValue.setText("35%");
+        sensitivityValue.setTextColor(0xffffffff);
+        sensitivityValue.setGravity(Gravity.CENTER);
+        panel.addView(sensitivityValue,new LinearLayout.LayoutParams(-1,-2));
+        FrameLayout.LayoutParams mp = new FrameLayout.LayoutParams(-1,-1);
+        menu.addView(panel,mp);
+        root.addView(menu,new FrameLayout.LayoutParams(-1,-1));
+        play.setOnClickListener(v -> menu.setVisibility(View.GONE));
+        pause.setOnClickListener(v -> menu.setVisibility(menu.getVisibility()==View.VISIBLE?View.GONE:View.VISIBLE));
+        sensitivity.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
+            public void onProgressChanged(SeekBar bar,int value,boolean user){float s=0.10f+(value/100f)*0.90f;world.setSensitivity(s);sensitivityValue.setText(value+"%");}
+            public void onStartTrackingTouch(SeekBar bar){}
+            public void onStopTrackingTouch(SeekBar bar){}
+        });
         setContentView(root);
         refreshSurvivalHud(); survivalHud.postDelayed(hudUpdater,1000);
     }
@@ -112,13 +160,14 @@ public class MainActivity extends Activity {
         void craft(){renderer.craft();}
         String status(){return renderer.status();}
         void saveWorld(){renderer.saveWorld();}
+        void setSensitivity(float value){renderer.setSensitivity(value);}
         private float lastX,lastY;
         @Override public boolean onTouchEvent(MotionEvent e) {
             if(e.getAction()==MotionEvent.ACTION_DOWN){lastX=e.getX();lastY=e.getY();return true;}
             if(e.getAction()==MotionEvent.ACTION_MOVE){
                 float dx=e.getX()-lastX,dy=e.getY()-lastY;
                 lastX=e.getX();lastY=e.getY();
-                renderer.rotate(dx*0.35f,dy*0.2f);
+                renderer.rotate(dx*renderer.sensitivity,dy*renderer.sensitivity*0.58f);
                 return true;
             }
             return true;
@@ -140,6 +189,8 @@ public class MainActivity extends Activity {
         private volatile int selected=0;
         private volatile float yaw=0;
         private volatile float pitch=18;
+        private volatile float sensitivity=0.35f;
+        void setSensitivity(float value){sensitivity=Math.max(0.05f,Math.min(1.0f,value));}
         private volatile float jumpOffset=0;
         private float dayTime=0;
         private volatile int health=20;
