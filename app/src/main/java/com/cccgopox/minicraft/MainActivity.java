@@ -312,6 +312,7 @@ public class MainActivity extends Activity {
         private volatile int health=20;
         private volatile int hunger=20;
         private int food=8;
+        private int coal=0,iron=0,gold=0,diamonds=0;
         private int survivalTicks=0;
         private volatile String notice="";
         private final float[] mobX={17f,30f,36f};
@@ -357,20 +358,20 @@ public class MainActivity extends Activity {
             pz=Math.max(1,Math.min(WORLD_SAFE,savedZ));
             health=Math.max(1,Math.min(20,prefs.getInt("health",20)));
             hunger=Math.max(0,Math.min(20,prefs.getInt("hunger",20)));
-            food=Math.max(0,Math.min(99,prefs.getInt("food",8)));
+            food=Math.max(0,Math.min(99,prefs.getInt("food",8)));coal=Math.max(0,prefs.getInt("ore_coal",0));iron=Math.max(0,prefs.getInt("ore_iron",0));gold=Math.max(0,prefs.getInt("ore_gold",0));diamonds=Math.max(0,prefs.getInt("ore_diamond",0));
             String plants=prefs.getString("vegetation_v2","");
             if(plants.length()==WORLD_SIZE*WORLD_SIZE)for(int z=0;z<WORLD_SIZE;z++)for(int x=0;x<WORLD_SIZE;x++){char p=plants.charAt(z*WORLD_SIZE+x);if(p>='0'&&p<='3')vegetation[z][x]=p-'0';}
             else{String oldPlants=prefs.getString("vegetation","");if(oldPlants.length()==576)for(int z=0;z<24;z++)for(int x=0;x<24;x++){char p=oldPlants.charAt(z*24+x);if(p>='0'&&p<='3')vegetation[z+12][x+12]=p-'0';}}
         }
-        void resetWorld(){resetRequested=true;prefs.edit().remove("terrain").remove("blocks").remove("terrain_v2").remove("blocks_v2").remove("blocks_v3").remove("blocks_v4").remove("terrain_v3").remove("vegetation").remove("vegetation_v2").remove("player_x").remove("player_z").remove("health").remove("hunger").remove("food").remove("inventory_0").remove("inventory_1").remove("inventory_2").remove("inventory_3").remove("inventory_4").remove("inventory_5").remove("inventory_6").remove("inventory_7").remove("inventory_8").remove("day_time").remove("world_seed").apply();}
-        void saveWorld(){if(resetRequested)return;StringBuilder data=new StringBuilder(WORLD_SIZE*WORLD_SIZE),savedBlocks=new StringBuilder(WORLD_SIZE*WORLD_SIZE*64),plants=new StringBuilder(WORLD_SIZE*WORLD_SIZE);for(int z=0;z<WORLD_SIZE;z++)for(int x=0;x<WORLD_SIZE;x++){data.append((char)(33+Math.max(1,Math.min(63,map[z][x]))));for(int y=0;y<64;y++)savedBlocks.append((char)(33+Math.max(0,Math.min(63,blocks[z][x][y]))));plants.append((char)('0'+vegetation[z][x]));}SharedPreferences.Editor e=prefs.edit().putString("terrain_v3",data.toString()).putString("blocks_v4",savedBlocks.toString()).putString("vegetation_v2",plants.toString()).putFloat("player_x",px).putFloat("player_z",pz).putInt("health",health).putInt("hunger",hunger).putInt("food",food).putFloat("day_time",dayTime).putLong("world_seed",worldSeed);for(int i=0;i<inventory.length;i++)e.putInt("inventory_"+i,inventory[i]);e.apply();}
+        void resetWorld(){resetRequested=true;prefs.edit().remove("terrain").remove("blocks").remove("terrain_v2").remove("blocks_v2").remove("blocks_v3").remove("blocks_v4").remove("terrain_v3").remove("vegetation").remove("vegetation_v2").remove("player_x").remove("player_z").remove("health").remove("hunger").remove("food").remove("ore_coal").remove("ore_iron").remove("ore_gold").remove("ore_diamond").remove("inventory_0").remove("inventory_1").remove("inventory_2").remove("inventory_3").remove("inventory_4").remove("inventory_5").remove("inventory_6").remove("inventory_7").remove("inventory_8").remove("day_time").remove("world_seed").apply();}
+        void saveWorld(){if(resetRequested)return;StringBuilder data=new StringBuilder(WORLD_SIZE*WORLD_SIZE),savedBlocks=new StringBuilder(WORLD_SIZE*WORLD_SIZE*64),plants=new StringBuilder(WORLD_SIZE*WORLD_SIZE);for(int z=0;z<WORLD_SIZE;z++)for(int x=0;x<WORLD_SIZE;x++){data.append((char)(33+Math.max(1,Math.min(63,map[z][x]))));for(int y=0;y<64;y++)savedBlocks.append((char)(33+Math.max(0,Math.min(63,blocks[z][x][y]))));plants.append((char)('0'+vegetation[z][x]));}SharedPreferences.Editor e=prefs.edit().putString("terrain_v3",data.toString()).putString("blocks_v4",savedBlocks.toString()).putString("vegetation_v2",plants.toString()).putFloat("player_x",px).putFloat("player_z",pz).putInt("health",health).putInt("hunger",hunger).putInt("food",food).putInt("ore_coal",coal).putInt("ore_iron",iron).putInt("ore_gold",gold).putInt("ore_diamond",diamonds).putFloat("day_time",dayTime).putLong("world_seed",worldSeed);for(int i=0;i<inventory.length;i++)e.putInt("inventory_"+i,inventory[i]);e.apply();}
         boolean clearAt(int x,int z){int h=map[z][x];if(h+2>=64)return false;for(int y=h+1;y<=h+2;y++){int id=blocks[z][x][y];if(id!=0&&id!=10)return false;}return true;}
         void move(int x,int z,int jump){double a=Math.toRadians(yaw);float nx=(float)(x*Math.cos(a)-z*Math.sin(a))*movementSpeed;float nz=(float)(x*Math.sin(a)+z*Math.cos(a))*movementSpeed;float targetX=Math.max(1,Math.min(WORLD_SAFE,px+nx));float targetZ=Math.max(1,Math.min(WORLD_SAFE,pz+nz));int oldX=Math.max(0,Math.min(WORLD_EDGE,Math.round(px))),oldZ=Math.max(0,Math.min(WORLD_EDGE,Math.round(pz)));int newX=Math.max(0,Math.min(WORLD_EDGE,Math.round(targetX))),newZ=Math.max(0,Math.min(WORLD_EDGE,Math.round(targetZ)));if(Math.abs(map[newZ][newX]-map[oldZ][oldX])<=1&&vegetation[newZ][newX]==0&&clearAt(newX,newZ)){px=targetX;pz=targetZ;}if(jump!=0&&jumpOffset<=0.01f)jumpOffset=1.5f; }
         void select(int type){if(type>=0&&type<inventory.length)selected=type;}
         synchronized void eat(){if(food>0&&(hunger<20||health<20)){food--;hunger=Math.min(20,hunger+5);health=Math.min(20,health+2);notice="Ate an apple (+5 hunger, +2 health)";}else notice=food==0?"No apples left":"Already full";}
         synchronized void craft(){if(inventory[1]>=4){inventory[1]-=4;inventory[2]=Math.min(999,inventory[2]+1);notice="Crafted 1 stone from 4 dirt";}else notice="Need 4 dirt to craft";}
         synchronized void attack(){int best=-1;float bestDistance=3.1f;double a=Math.toRadians(yaw);float fx=(float)Math.sin(a),fz=(float)Math.cos(a);for(int i=0;i<3;i++){if(mobHealth[i]<=0)continue;float dx=mobX[i]-px,dz=mobZ[i]-pz;float d=(float)Math.sqrt(dx*dx+dz*dz);if(d<bestDistance&&d>0.01f&&(dx/d*fx+dz/d*fz)>.25f){best=i;bestDistance=d;}}if(best<0){notice="No mob in front of you";return;}mobHealth[best]--;notice=mobHealth[best]<=0?"Mob defeated!":"Mob hit: "+mobHealth[best]+" HP left";}
-        synchronized String status(){int x=Math.max(0,Math.min(WORLD_EDGE,Math.round(px))),z=Math.max(0,Math.min(WORLD_EDGE,Math.round(pz)));String area=biome[z][x]==1?"Пустыня":(biome[z][x]==2?"Снежный лес":"Лес");String phase=Math.sin(dayTime)>0?"День":"Ночь";int alive=0;for(int hp:mobHealth)if(hp>0)alive++;return "♥ "+health+"/20    Сытость "+hunger+"/20    Яблоки "+food+"\n"+area+"  •  "+phase+"  •  Мобы: "+alive+(notice.length()>0?"\n"+notice:"");}
+        synchronized String status(){int x=Math.max(0,Math.min(WORLD_EDGE,Math.round(px))),z=Math.max(0,Math.min(WORLD_EDGE,Math.round(pz)));String area=biome[z][x]==1?"Пустыня":(biome[z][x]==2?"Снежный лес":"Лес");String phase=Math.sin(dayTime)>0?"День":"Ночь";int alive=0;for(int hp:mobHealth)if(hp>0)alive++;return "♥ "+health+"/20    Сытость "+hunger+"/20    Яблоки "+food+"\nУголь "+coal+"  Железо "+iron+"  Золото "+gold+"  Алмазы "+diamonds+"\n"+area+"  •  "+phase+"  •  Мобы: "+alive+(notice.length()>0?"\n"+notice:"");}
         synchronized int inventoryCount(int type){return type>=0&&type<inventory.length?inventory[type]:0;}
          private int[] rayTarget(){
             double a=Math.toRadians(yaw);
@@ -399,7 +400,7 @@ public class MainActivity extends Activity {
                 if(map[z][x]<=1){notice="Cannot break the base";return;}
                 map[z][x]--;
                 int id=blocks[z][x][map[z][x]];
-                if(id>=1&&id<=9)inventory[id-1]=Math.min(999,inventory[id-1]+1);
+                if(id>=1&&id<=9)inventory[id-1]=Math.min(999,inventory[id-1]+1);else if(id==11)coal++;else if(id==12)iron++;else if(id==16)gold++;else if(id==17)diamonds++;
                 blocks[z][x][map[z][x]]=0;
                 notice="Block mined";
             }
