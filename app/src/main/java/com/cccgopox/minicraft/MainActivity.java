@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.opengl.GLSurfaceView;
@@ -18,6 +20,7 @@ import android.widget.TextView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.ScrollView;
+import android.widget.Switch;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -28,11 +31,13 @@ public class MainActivity extends Activity {
     private Button[] hotbarButtons;
     private TextView survivalHud;
     private final Handler controlHandler=new Handler(Looper.getMainLooper());
+    private ToneGenerator tone;
     private final Runnable hudUpdater = new Runnable(){ public void run(){ if(survivalHud!=null && world!=null){survivalHud.setText(world.status());survivalHud.postDelayed(this,1000);} } };
     private final Runnable autosaveUpdater = new Runnable(){ public void run(){if(world!=null){world.saveWorld();controlHandler.postDelayed(this,10000);}} };
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         getWindow().getDecorView().setSystemUiVisibility(5894 | 1024 | 512);
+        tone=new ToneGenerator(AudioManager.STREAM_MUSIC,45);
         FrameLayout root = new FrameLayout(this);
         world = new WorldView(this);
         root.addView(world);
@@ -62,15 +67,15 @@ public class MainActivity extends Activity {
         Button eat = new Button(this); eat.setText("EAT");
         FrameLayout.LayoutParams ep = new FrameLayout.LayoutParams(112,76,Gravity.TOP|Gravity.RIGHT);
         ep.setMargins(0,22,18,0); root.addView(eat,ep);
-        eat.setOnClickListener(v -> {world.eat();refreshSurvivalHud();});
+        eat.setOnClickListener(v -> {world.eat();playTone(ToneGenerator.TONE_PROP_BEEP);refreshSurvivalHud();});
         Button craft = new Button(this); craft.setText("CRAFT");
         FrameLayout.LayoutParams craftParams = new FrameLayout.LayoutParams(112,76,Gravity.TOP|Gravity.RIGHT);
         craftParams.setMargins(0,0,18,108); root.addView(craft,craftParams);
-        craft.setOnClickListener(v -> {world.craft();refreshHotbar();refreshSurvivalHud();});
+        craft.setOnClickListener(v -> {world.craft();playTone(ToneGenerator.TONE_PROP_ACK);refreshHotbar();refreshSurvivalHud();});
         Button hit = new Button(this); hit.setText("HIT");
         FrameLayout.LayoutParams hitParams = new FrameLayout.LayoutParams(112,76,Gravity.TOP|Gravity.RIGHT);
         hitParams.setMargins(0,194,18,0);root.addView(hit,hitParams);
-        hit.setOnClickListener(v->{world.attack();refreshSurvivalHud();});
+        hit.setOnClickListener(v->{world.attack();playTone(ToneGenerator.TONE_PROP_NACK);refreshSurvivalHud();});
         hotbarButtons = new Button[4];
         String[] names = {"GRASS", "DIRT", "STONE", "WOOD"};
         int[] leftMargins = {0, 0, 110, 330};
@@ -110,6 +115,12 @@ public class MainActivity extends Activity {
         subtitle.setTextSize(14);
         subtitle.setGravity(Gravity.CENTER);
         panel.addView(subtitle,new LinearLayout.LayoutParams(-1,-2));
+        Switch soundSwitch = new Switch(this);
+        soundSwitch.setText("ЗВУКИ");
+        soundSwitch.setTextColor(0xffffffff);
+        soundSwitch.setChecked(world.soundEnabled());
+        panel.addView(soundSwitch,new LinearLayout.LayoutParams(-1,-2));
+        soundSwitch.setOnCheckedChangeListener((button,checked)->world.setSoundEnabled(checked));
         Button play = new Button(this); play.setText("ИГРАТЬ / ПРОДОЛЖИТЬ");
         panel.addView(play,new LinearLayout.LayoutParams(280,64));
         Button newWorld = new Button(this); newWorld.setText("СОЗДАТЬ НОВЫЙ МИР");
@@ -180,6 +191,8 @@ public class MainActivity extends Activity {
         setContentView(root);
         refreshSurvivalHud(); survivalHud.postDelayed(hudUpdater,1000);controlHandler.postDelayed(autosaveUpdater,10000);
     }
+    private void playTone(int type){if(tone!=null&&world!=null&&world.soundEnabled())tone.startTone(type,90);}
+    @Override protected void onDestroy(){if(tone!=null){tone.release();tone=null;}super.onDestroy();}
     private void refreshSurvivalHud(){if(survivalHud!=null&&world!=null)survivalHud.setText(world.status());}
     private void refreshHotbar() {
         if (hotbarButtons == null || world == null) return;
@@ -204,7 +217,7 @@ public class MainActivity extends Activity {
                 if(e.getAction()==MotionEvent.ACTION_UP||e.getAction()==MotionEvent.ACTION_CANCEL){held[0]=false;controlHandler.removeCallbacks(repeat);return true;}
                 return true;
             });
-        }else b.setOnClickListener(v -> {if(action==3){w.edit(false);refreshHotbar();refreshSurvivalHud();}if(action==4){w.edit(true);refreshHotbar();refreshSurvivalHud();}});
+        }else b.setOnClickListener(v -> {if(action==3){w.edit(false);playTone(ToneGenerator.TONE_PROP_BEEP);refreshHotbar();refreshSurvivalHud();}if(action==4){w.edit(true);playTone(ToneGenerator.TONE_PROP_ACK);refreshHotbar();refreshSurvivalHud();}});
 
     }
     @Override protected void onPause(){super.onPause();controlHandler.removeCallbacks(autosaveUpdater);if(survivalHud!=null)survivalHud.removeCallbacks(hudUpdater);if(world!=null){world.saveWorld();world.onPause();}}
@@ -221,6 +234,8 @@ public class MainActivity extends Activity {
         void eat(){renderer.eat();}
         void craft(){renderer.craft();}
         void attack(){renderer.attack();}
+        boolean soundEnabled(){return renderer.soundEnabled;}
+        void setSoundEnabled(boolean value){renderer.setSoundEnabled(value);}
         String status(){return renderer.status();}
         void saveWorld(){renderer.saveWorld();}
         void resetWorld(){renderer.resetWorld();}
@@ -268,10 +283,12 @@ public class MainActivity extends Activity {
         private volatile float sensitivity=0.415f;
         private volatile int renderDistance=12;
         private volatile float movementSpeed=.16f;
+        private volatile boolean soundEnabled=true;
         void setSensitivity(float value){sensitivity=Math.max(0.05f,Math.min(1.0f,value));prefs.edit().putFloat("camera_sensitivity",sensitivity).apply();}
         int sensitivityPercent(){return Math.max(0,Math.min(100,Math.round((sensitivity-0.10f)/0.90f*100f)));}
         void setRenderDistance(int value){renderDistance=Math.max(8,Math.min(24,value));prefs.edit().putInt("render_distance",renderDistance).apply();}
         void setMovementSpeed(float value){movementSpeed=Math.max(.08f,Math.min(.32f,value));prefs.edit().putFloat("movement_speed",movementSpeed).apply();}
+        void setSoundEnabled(boolean value){soundEnabled=value;prefs.edit().putBoolean("sound_enabled",value).apply();}
         int movementSpeedPercent(){return Math.max(0,Math.min(100,Math.round((movementSpeed-.08f)/.24f*100f)));}
         int renderDistance(){return renderDistance;}
         private volatile boolean paused=true;
@@ -290,7 +307,7 @@ public class MainActivity extends Activity {
         private int mobFrame=0;
         void rotate(float dx,float dy){yaw+=dx;pitch=Math.max(-5,Math.min(55,pitch+dy));}
         void zoom(float amount){cameraDistance=Math.max(8,Math.min(28,cameraDistance+amount));prefs.edit().putFloat("camera_distance",cameraDistance).apply();}
-        WorldRenderer(Context context){prefs=context.getSharedPreferences("minicraft_world",Context.MODE_PRIVATE);sensitivity=Math.max(0.05f,Math.min(1.0f,prefs.getFloat("camera_sensitivity",0.415f)));renderDistance=Math.max(8,Math.min(24,prefs.getInt("render_distance",12)));movementSpeed=Math.max(.08f,Math.min(.32f,prefs.getFloat("movement_speed",.16f)));cameraDistance=Math.max(8,Math.min(28,prefs.getFloat("camera_distance",18f)));dayTime=prefs.getFloat("day_time",0f);long seed=prefs.getLong("world_seed",System.currentTimeMillis());prefs.edit().putLong("world_seed",seed).apply();Random r=new Random(seed);for(int z=0;z<24;z++)for(int x=0;x<24;x++){float climate=(float)(Math.sin(x*.19)+Math.cos(z*.16)+Math.sin((x+z)*.11));biome[z][x]=climate>1.0f?1:(climate<-.8f?2:0);map[z][x]=Math.max(2,Math.min(6,(int)(2+Math.sin(x*.4)*1.4+Math.cos(z*.3)*1.2+r.nextDouble()*1.2)));for(int y=0;y<map[z][x];y++)blocks[z][x][y]=y==map[z][x]-1?1:(y>=map[z][x]-3?2:3);if((x-12)*(x-12)+(z-12)*(z-12)>12){if(biome[z][x]==0&&r.nextFloat()<.075f)vegetation[z][x]=1;else if(biome[z][x]==1&&r.nextFloat()<.025f)vegetation[z][x]=2;else if(biome[z][x]==2&&r.nextFloat()<.055f)vegetation[z][x]=3;}}loadWorld();}
+        WorldRenderer(Context context){prefs=context.getSharedPreferences("minicraft_world",Context.MODE_PRIVATE);sensitivity=Math.max(0.05f,Math.min(1.0f,prefs.getFloat("camera_sensitivity",0.415f)));renderDistance=Math.max(8,Math.min(24,prefs.getInt("render_distance",12)));movementSpeed=Math.max(.08f,Math.min(.32f,prefs.getFloat("movement_speed",.16f)));soundEnabled=prefs.getBoolean("sound_enabled",true);cameraDistance=Math.max(8,Math.min(28,prefs.getFloat("camera_distance",18f)));dayTime=prefs.getFloat("day_time",0f);long seed=prefs.getLong("world_seed",System.currentTimeMillis());prefs.edit().putLong("world_seed",seed).apply();Random r=new Random(seed);for(int z=0;z<24;z++)for(int x=0;x<24;x++){float climate=(float)(Math.sin(x*.19)+Math.cos(z*.16)+Math.sin((x+z)*.11));biome[z][x]=climate>1.0f?1:(climate<-.8f?2:0);map[z][x]=Math.max(2,Math.min(6,(int)(2+Math.sin(x*.4)*1.4+Math.cos(z*.3)*1.2+r.nextDouble()*1.2)));for(int y=0;y<map[z][x];y++)blocks[z][x][y]=y==map[z][x]-1?1:(y>=map[z][x]-3?2:3);if((x-12)*(x-12)+(z-12)*(z-12)>12){if(biome[z][x]==0&&r.nextFloat()<.075f)vegetation[z][x]=1;else if(biome[z][x]==1&&r.nextFloat()<.025f)vegetation[z][x]=2;else if(biome[z][x]==2&&r.nextFloat()<.055f)vegetation[z][x]=3;}}loadWorld();}
         void loadWorld(){for(int i=0;i<4;i++)inventory[i]=Math.max(0,Math.min(999,prefs.getInt("inventory_"+i,inventory[i])));String data=prefs.getString("terrain","");if(data.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=data.charAt(z*24+x);if(c>='1'&&c<='9')map[z][x]=c-'0';}}String saved=prefs.getString("blocks","");if(saved.length()==24*24*9){for(int z=0;z<24;z++)for(int x=0;x<24;x++)for(int y=0;y<9;y++){char c=saved.charAt((z*24+x)*9+y);if(c>='0'&&c<='4')blocks[z][x][y]=c-'0';}}else{String old=prefs.getString("block_types","");if(old.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=old.charAt(z*24+x);if(c>='0'&&c<='2'&&map[z][x]>0)blocks[z][x][map[z][x]-1]=c-'0'+1;}}}px=Math.max(1,Math.min(22,prefs.getFloat("player_x",12)));pz=Math.max(1,Math.min(22,prefs.getFloat("player_z",12)));health=Math.max(1,Math.min(20,prefs.getInt("health",20)));hunger=Math.max(0,Math.min(20,prefs.getInt("hunger",20)));food=Math.max(0,Math.min(99,prefs.getInt("food",8)));String plants=prefs.getString("vegetation","");if(plants.length()==576)for(int z=0;z<24;z++)for(int x=0;x<24;x++){char p=plants.charAt(z*24+x);if(p>='0'&&p<='3')vegetation[z][x]=p-'0';}}
         void resetWorld(){resetRequested=true;prefs.edit().remove("terrain").remove("blocks").remove("player_x").remove("player_z").remove("health").remove("hunger").remove("food").remove("inventory_0").remove("inventory_1").remove("inventory_2").remove("inventory_3").remove("vegetation").remove("day_time").remove("world_seed").apply();}
         void saveWorld(){if(resetRequested)return;StringBuilder data=new StringBuilder(576),savedBlocks=new StringBuilder(24*24*9),plants=new StringBuilder(576);for(int z=0;z<24;z++)for(int x=0;x<24;x++){data.append((char)('0'+Math.max(1,Math.min(9,map[z][x]))));for(int y=0;y<9;y++)savedBlocks.append((char)('0'+Math.max(0,Math.min(4,blocks[z][x][y]))));plants.append((char)('0'+vegetation[z][x]));}SharedPreferences.Editor e=prefs.edit().putString("terrain",data.toString()).putString("blocks",savedBlocks.toString()).putString("vegetation",plants.toString()).putFloat("player_x",px).putFloat("player_z",pz).putInt("health",health).putInt("hunger",hunger).putInt("food",food).putFloat("day_time",dayTime);for(int i=0;i<4;i++)e.putInt("inventory_"+i,inventory[i]);e.apply();}
