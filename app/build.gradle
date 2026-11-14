@@ -1,9 +1,13 @@
 plugins {
     id 'com.android.application'
 }
+
+def generatedIconRes = layout.buildDirectory.dir("generated/minicraft-res")
+
 android {
     namespace 'com.cccgopox.minicraft'
     compileSdk 35
+
     defaultConfig {
         applicationId 'com.cccgopox.minicraft'
         minSdk 23
@@ -11,4 +15,28 @@ android {
         versionCode 3
         versionName '0.3.0'
     }
+
+    sourceSets {
+        main {
+            res.srcDir(generatedIconRes)
+        }
+    }
+}
+
+tasks.register("generateMiniCraftIcon") {
+    def sourceFile = file("src/main/icon/MiniCraftIconReal.png.b64")
+    def outputFile = generatedIconRes.map { it.file("mipmap-nodpi/ic_minicraft.png") }
+
+    inputs.file(sourceFile)
+    outputs.file(outputFile)
+
+    doLast {
+        def target = outputFile.get().asFile
+        target.parentFile.mkdirs()
+        target.bytes = java.util.Base64.decoder.decode(sourceFile.text.trim())
+    }
+}
+
+tasks.named("preBuild").configure {
+    dependsOn("generateMiniCraftIcon")
 }
