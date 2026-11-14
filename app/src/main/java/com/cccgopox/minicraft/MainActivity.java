@@ -202,6 +202,7 @@ public class MainActivity extends Activity {
             hotbarButtons[i].setAlpha(world.selectedType() == i ? 1.0f : 0.72f);
         }
     }
+    private void editAction(WorldView w,int action){if(action==3){w.edit(false);playTone(ToneGenerator.TONE_PROP_BEEP);}else if(action==4){w.edit(true);playTone(ToneGenerator.TONE_PROP_ACK);}refreshHotbar();refreshSurvivalHud();}
     private void moveAction(WorldView w,int action){if(action==0)w.move(0,1,0);if(action==1)w.move(-1,0,0);if(action==2)w.move(1,0,0);if(action==5)w.move(0,-1,0);}
     private void addButton(FrameLayout root,String label,int gravity,int offset,WorldView w,int action) {
         Button b=new Button(this); b.setText(label);
@@ -217,7 +218,15 @@ public class MainActivity extends Activity {
                 if(e.getAction()==MotionEvent.ACTION_UP||e.getAction()==MotionEvent.ACTION_CANCEL){held[0]=false;controlHandler.removeCallbacks(repeat);return true;}
                 return true;
             });
-        }else b.setOnClickListener(v -> {if(action==3){w.edit(false);playTone(ToneGenerator.TONE_PROP_BEEP);refreshHotbar();refreshSurvivalHud();}if(action==4){w.edit(true);playTone(ToneGenerator.TONE_PROP_ACK);refreshHotbar();refreshSurvivalHud();}});
+        }else if(action==3||action==4){
+            final boolean[] held={false};
+            Runnable repeat=new Runnable(){public void run(){if(!held[0])return;editAction(w,action);controlHandler.postDelayed(this,240);}};
+            b.setOnTouchListener((v,e)->{
+                if(e.getAction()==MotionEvent.ACTION_DOWN){held[0]=true;editAction(w,action);controlHandler.postDelayed(repeat,240);return true;}
+                if(e.getAction()==MotionEvent.ACTION_UP||e.getAction()==MotionEvent.ACTION_CANCEL){held[0]=false;controlHandler.removeCallbacks(repeat);return true;}
+                return true;
+            });
+        }
 
     }
     @Override protected void onPause(){super.onPause();controlHandler.removeCallbacks(autosaveUpdater);if(survivalHud!=null)survivalHud.removeCallbacks(hudUpdater);if(world!=null){world.saveWorld();world.onPause();}}
