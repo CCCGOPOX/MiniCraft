@@ -12,7 +12,7 @@
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 var(--txt);padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
 .wrap{max-width:1000px;margin:0 auto}.top{display:flex;justify-content:space-between;align-items:center;padding-top:16px;gap:12px}.brand{font:10px var(--pix);color:var(--grass-d);text-decoration:none}.lang{display:flex}.lang button{font:600 13px var(--txt);padding:6px 12px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}.lang button+button{border-left:0}.lang button[aria-pressed=true]{background:var(--grass-d);color:#fff;border-color:var(--grass-d)}
 nav{display:flex;gap:8px 18px;flex-wrap:wrap;padding:17px 0;border-bottom:1px solid var(--line)}nav a{font-size:13px;font-weight:600;color:var(--muted);text-decoration:none}nav a:hover{color:var(--grass)}
-header.hero{padding:30px 0 34px;display:grid;grid-template-columns:1fr 1.05fr;gap:32px;align-items:center}h1{font:400 clamp(28px,6vw,52px)/1.2 var(--pix);margin:0 0 16px;letter-spacing:-.04em}h1 span{color:var(--grass)}.lead{font-size:18px;color:var(--muted);max-width:52ch;margin:0 0 24px}.btn{font:600 15px var(--txt);padding:14px 22px;border:0;cursor:pointer;color:#fff;background:var(--grass-d);text-decoration:none;display:inline-block;box-shadow:inset -3px -3px 0 rgba(0,0,0,.28),inset 3px 3px 0 rgba(255,255,255,.22)}.btn:hover{background:var(--grass)}.btn:disabled,.btn[aria-disabled="true"]{background:#8a8f84;cursor:not-allowed;box-shadow:inset -3px -3px 0 rgba(0,0,0,.18),inset 3px 3px 0 rgba(255,255,255,.12);opacity:.85}.btn:disabled:hover{background:#8a8f84}.meta{margin-top:13px;font-size:13px;color:var(--muted)}.update-note{display:block;margin-top:9px;font-size:12px;color:var(--muted);font-style:italic;max-width:52ch}
+header.hero{padding:30px 0 34px;display:grid;grid-template-columns:1fr 1.05fr;gap:32px;align-items:center}h1{font:400 clamp(28px,6vw,52px)/1.2 var(--pix);margin:0 0 16px;letter-spacing:-.04em}h1 span{color:var(--grass)}.lead{font-size:18px;color:var(--muted);max-width:52ch;margin:0 0 24px}.btn{font:600 15px var(--txt);padding:14px 22px;border:0;cursor:pointer;color:#fff;background:var(--grass-d);text-decoration:none;display:inline-block;box-shadow:inset -3px -3px 0 rgba(0,0,0,.28),inset 3px 3px 0 rgba(255,255,255,.22)}.btn:hover{background:var(--grass)}.btn.is-locked{background:#8a8f84;cursor:not-allowed;box-shadow:inset -3px -3px 0 rgba(0,0,0,.18),inset 3px 3px 0 rgba(255,255,255,.12);opacity:.85}.btn.is-locked:hover{background:#8a8f84}.meta{margin-top:13px;font-size:13px;color:var(--muted)}.update-note{display:block;margin-top:9px;font-size:12px;color:var(--muted);font-style:italic;max-width:52ch;transition:color .25s ease,font-size .25s ease,font-weight .25s ease}.update-note.flash{animation:flashNote .6s ease}@keyframes flashNote{0%{color:var(--muted);font-size:12px;font-weight:400}20%{color:#d33a2c;font-size:14px;font-weight:700}70%{color:#d33a2c;font-size:14px;font-weight:700}100%{color:var(--muted);font-size:12px;font-weight:400}}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .update-note.flash{animation:flashNoteDark .6s ease}}@keyframes flashNoteDark{0%{color:var(--muted);font-size:12px;font-weight:400}20%{color:#ff6b5a;font-size:14px;font-weight:700}70%{color:#ff6b5a;font-size:14px;font-weight:700}100%{color:var(--muted);font-size:12px;font-weight:400}}
 .shot{margin:0;min-width:0}.shot img{display:block;width:100%;height:auto;border:3px solid var(--line);background:var(--soft)}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 12px}.stat{background:var(--card);border:1px solid var(--line);padding:13px 15px}.stat strong{display:block;font:16px var(--pix);color:var(--grass-d);margin-bottom:8px}.stat span{font-size:12px;color:var(--muted)}
 section{padding:27px 0}h2{font:400 17px/1.5 var(--pix);margin:0 0 18px}h3{margin:0 0 6px;font-size:16px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}.card{background:var(--card);border:1px solid var(--line);padding:16px 18px;min-width:0}.card p{margin:0;color:var(--muted);font-size:14px}.tag{display:inline-block;background:var(--soft);color:var(--grass-d);padding:3px 8px;font-size:11px;font-weight:700;margin-bottom:9px}.gal{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.gal figure{margin:0;min-width:0}.gal img{display:block;width:100%;height:auto;border:2px solid var(--line);background:var(--soft)}.gal figcaption{font-size:13px;color:var(--muted);margin-top:6px}
@@ -30,8 +30,8 @@ section{padding:27px 0}h2{font:400 17px/1.5 var(--pix);margin:0 0 18px}h3{margin
 <div>
 <h1>Mini<span>Craft</span></h1>
 <p class="lead" data-i="lead"></p>
-<button class="btn" type="button" id="downloadBtn" disabled aria-disabled="true" data-i="dl"></button>
-<small class="update-note" data-i="update_note"></small>
+<button class="btn is-locked" type="button" id="downloadBtn" aria-disabled="true" data-i="dl"></button>
+<small class="update-note" id="updateNote" data-i="update_note"></small>
 </div>
 <figure class="shot"><img src="screenshots/hero.jpg" width="1280" height="720" alt="Скриншот игры MiniCraft"></figure>
 </header>
@@ -139,6 +139,17 @@ function setLang(l){var d=T[l]||T.ru;document.documentElement.lang=l;document.ti
 document.querySelectorAll(".lang button").forEach(function(b){b.addEventListener("click",function(){setLang(b.getAttribute("data-lang"))})});
 var lang=null;try{lang=localStorage.getItem("mc-lang")}catch(e){}if(!lang)lang=(navigator.language||"ru").toLowerCase().indexOf("ru")===0?"ru":"en";setLang(lang==="en"?"en":"ru");
 var count=0;try{count=Number(localStorage.getItem("mc-download-clicks")||0)}catch(e){}document.getElementById("downloadCount").textContent=count.toLocaleString();
+
+/* Пока игра обновляется — клик по кнопке не скачивает файл,
+   а подсвечивает текст под ней красным и чуть крупнее. */
+var noteEl=document.getElementById("updateNote");
+document.getElementById("downloadBtn").addEventListener("click",function(e){
+  e.preventDefault();
+  noteEl.classList.remove("flash");
+  void noteEl.offsetWidth; /* перезапуск анимации при повторном клике */
+  noteEl.classList.add("flash");
+});
+noteEl.addEventListener("animationend",function(){noteEl.classList.remove("flash")});
 </script>
 </body>
 </html>
