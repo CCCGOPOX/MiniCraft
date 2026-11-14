@@ -78,6 +78,15 @@ using (
   or exists (select 1 from public.mc_profiles p where p.id = auth.uid() and p.is_admin)
 );
 
+-- Players can delete their own messages; admins can delete any message.
+drop policy if exists "Players and admins delete messages" on public.mc_messages;
+create policy "Players and admins delete messages"
+on public.mc_messages for delete to authenticated
+using (
+  auth.uid() = user_id
+  or exists (select 1 from public.mc_profiles p where p.id = auth.uid() and p.is_admin)
+);
+
 -- Only the administrator can read all messages and write replies.
 drop policy if exists "Admin replies to messages" on public.mc_messages;
 create policy "Admin replies to messages"
@@ -85,7 +94,7 @@ on public.mc_messages for update to authenticated
 using (exists (select 1 from public.mc_profiles p where p.id = auth.uid() and p.is_admin))
 with check (exists (select 1 from public.mc_profiles p where p.id = auth.uid() and p.is_admin));
 
-grant select, insert, update on public.mc_messages to authenticated;
+grant select, insert, update, delete on public.mc_messages to authenticated;
 
 -- IMPORTANT: after Qushmi creates an account, run this once using the exact
 -- email address used for that account. Replace the address before execution:
