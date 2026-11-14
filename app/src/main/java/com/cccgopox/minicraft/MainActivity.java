@@ -350,8 +350,11 @@ public class MainActivity extends Activity {
                     }
                 }
             }
-            px=Math.max(1,Math.min(WORLD_SAFE,prefs.getFloat("player_x",WORLD_CENTER)));
-            pz=Math.max(1,Math.min(WORLD_SAFE,prefs.getFloat("player_z",WORLD_CENTER)));
+            boolean oldWorld=prefs.getString("terrain_v3","").length()!=WORLD_SIZE*WORLD_SIZE&&(prefs.getString("terrain_v2","").length()==576||prefs.getString("terrain","").length()==576);
+            float savedX=prefs.getFloat("player_x",WORLD_CENTER),savedZ=prefs.getFloat("player_z",WORLD_CENTER);
+            if(oldWorld){savedX+=12;savedZ+=12;}
+            px=Math.max(1,Math.min(WORLD_SAFE,savedX));
+            pz=Math.max(1,Math.min(WORLD_SAFE,savedZ));
             health=Math.max(1,Math.min(20,prefs.getInt("health",20)));
             hunger=Math.max(0,Math.min(20,prefs.getInt("hunger",20)));
             food=Math.max(0,Math.min(99,prefs.getInt("food",8)));
