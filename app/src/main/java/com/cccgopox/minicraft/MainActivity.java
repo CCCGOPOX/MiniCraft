@@ -324,7 +324,40 @@ public class MainActivity extends Activity {
         void rotate(float dx,float dy){yaw+=dx;pitch=Math.max(-5,Math.min(55,pitch+dy));}
         void zoom(float amount){cameraDistance=Math.max(8,Math.min(28,cameraDistance+amount));prefs.edit().putFloat("camera_distance",cameraDistance).apply();}
         WorldRenderer(Context context){prefs=context.getSharedPreferences("minicraft_world",Context.MODE_PRIVATE);sensitivity=Math.max(0.05f,Math.min(1.0f,prefs.getFloat("camera_sensitivity",0.415f)));renderDistance=Math.max(8,Math.min(24,prefs.getInt("render_distance",12)));movementSpeed=Math.max(.08f,Math.min(.32f,prefs.getFloat("movement_speed",.16f)));soundEnabled=prefs.getBoolean("sound_enabled",true);cameraDistance=Math.max(8,Math.min(28,prefs.getFloat("camera_distance",18f)));dayTime=prefs.getFloat("day_time",0f);long seed=prefs.getLong("world_seed",System.currentTimeMillis());prefs.edit().putLong("world_seed",seed).apply();Random r=new Random(seed);for(int z=0;z<24;z++)for(int x=0;x<24;x++){int wx=x-12,wz=z-12;biome[z][x]=OriginalTerrain.biome(wx,wz,(int)seed);int h=OriginalTerrain.heightAt(wx,wz,(int)seed);boolean desert=biome[z][x]==1&&h>20;boolean sand=h<=24||desert;boolean snow=!sand&&(h>=44||(biome[z][x]==2&&h>24));map[z][x]=h;for(int y=0;y<=h;y++){int type;if(y==0)type=7;else if(y==h){type=sand?8:(snow?9:1);if(h<22&&OriginalTerrain.noiseAt(wx/7.0,wz/7.0,(int)seed*7+8)>.62)type=20;else if(h<22&&OriginalTerrain.noiseAt(wx/6.0,wz/6.0,(int)seed*7+11)>.66)type=14;}else if(y>=h-3)type=sand?8:2;else if(desert&&y>=h-7)type=29;else{type=3;int ore=OriginalTerrain.oreAt(wx,y,wz,(int)seed);if(ore!=0)type=ore;}if(OriginalTerrain.isCave(wx,y,wz,h,(int)seed))type=0;blocks[z][x][y]=type;}for(int y=h+1;y<=22&&y<64;y++)blocks[z][x][y]=10;if((x-12)*(x-12)+(z-12)*(z-12)>12){if(biome[z][x]==0&&r.nextFloat()<.075f)vegetation[z][x]=1;else if(biome[z][x]==1&&r.nextFloat()<.025f)vegetation[z][x]=2;else if(biome[z][x]==2&&r.nextFloat()<.055f)vegetation[z][x]=3;}}loadWorld();}
-        void loadWorld(){for(int i=0;i<4;i++)inventory[i]=Math.max(0,Math.min(999,prefs.getInt("inventory_"+i,inventory[i])));String data=prefs.getString("terrain_v2","");if(data.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){int h=data.charAt(z*24+x)-33;if(h>=1&&h<64)map[z][x]=h;}}else{String legacy=prefs.getString("terrain","");if(legacy.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=legacy.charAt(z*24+x);if(c>='1'&&c<='9')map[z][x]=c-'0';}}}String saved=prefs.getString("blocks_v3","");if(saved.length()==24*24*64){for(int z=0;z<24;z++)for(int x=0;x<24;x++)for(int y=0;y<64;y++){int id=saved.charAt((z*24+x)*64+y)-33;if(id>=0&&id<64)blocks[z][x][y]=id;}}else{String legacyV2=prefs.getString("blocks_v2","");if(legacyV2.length()==24*24*64){for(int z=0;z<24;z++)for(int x=0;x<24;x++)for(int y=0;y<64;y++){char c=legacyV2.charAt((z*24+x)*64+y);if(c>='0'&&c<='7')blocks[z][x][y]=c-'0';}}else{String legacyBlocks=prefs.getString("blocks","");if(legacyBlocks.length()==24*24*9){for(int z=0;z<24;z++)for(int x=0;x<24;x++)for(int y=0;y<9;y++){char c=legacyBlocks.charAt((z*24+x)*9+y);if(c>='0'&&c<='4')blocks[z][x][y]=c-'0';}}else{String old=prefs.getString("block_types","");if(old.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=old.charAt(z*24+x);if(c>='0'&&c<='2'&&map[z][x]>0)blocks[z][x][map[z][x]-1]=c-'0'+1;}}}}}px=Math.max(1,Math.min(22,prefs.getFloat("player_x",12)));pz=Math.max(1,Math.min(22,prefs.getFloat("player_z",12)));health=Math.max(1,Math.min(20,prefs.getInt("health",20)));hunger=Math.max(0,Math.min(20,prefs.getInt("hunger",20)));food=Math.max(0,Math.min(99,prefs.getInt("food",8)));String plants=prefs.getString("vegetation","");if(plants.length()==576)for(int z=0;z<24;z++)for(int x=0;x<24;x++){char p=plants.charAt(z*24+x);if(p>='0'&&p<='3')vegetation[z][x]=p-'0';}}
+        void loadWorld(){
+            for(int i=0;i<4;i++)inventory[i]=Math.max(0,Math.min(999,prefs.getInt("inventory_"+i,inventory[i])));
+            String data=prefs.getString("terrain_v2","");
+            if(data.length()==576){
+                for(int z=0;z<24;z++)for(int x=0;x<24;x++){int h=data.charAt(z*24+x)-33;if(h>=1&&h<64)map[z][x]=h;}
+            }else{
+                String legacy=prefs.getString("terrain","");
+                if(legacy.length()==576)for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=legacy.charAt(z*24+x);if(c>='1'&&c<='9')map[z][x]=c-'0';}
+            }
+            String saved=prefs.getString("blocks_v3","");
+            if(saved.length()==24*24*64){
+                for(int z=0;z<24;z++)for(int x=0;x<24;x++)for(int y=0;y<64;y++){int id=saved.charAt((z*24+x)*64+y)-33;if(id>=0&&id<64)blocks[z][x][y]=id;}
+            }else{
+                String legacyV2=prefs.getString("blocks_v2","");
+                if(legacyV2.length()==24*24*64){
+                    for(int z=0;z<24;z++)for(int x=0;x<24;x++)for(int y=0;y<64;y++){char c=legacyV2.charAt((z*24+x)*64+y);if(c>='0'&&c<='7')blocks[z][x][y]=c-'0';}
+                }else{
+                    String legacyBlocks=prefs.getString("blocks","");
+                    if(legacyBlocks.length()==24*24*9){
+                        for(int z=0;z<24;z++)for(int x=0;x<24;x++)for(int y=0;y<9;y++){char c=legacyBlocks.charAt((z*24+x)*9+y);if(c>='0'&&c<='4')blocks[z][x][y]=c-'0';}
+                    }else{
+                        String old=prefs.getString("block_types","");
+                        if(old.length()==576)for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=old.charAt(z*24+x);if(c>='0'&&c<='2'&&map[z][x]>0)blocks[z][x][map[z][x]-1]=c-'0'+1;}
+                    }
+                }
+            }
+            px=Math.max(1,Math.min(22,prefs.getFloat("player_x",12)));
+            pz=Math.max(1,Math.min(22,prefs.getFloat("player_z",12)));
+            health=Math.max(1,Math.min(20,prefs.getInt("health",20)));
+            hunger=Math.max(0,Math.min(20,prefs.getInt("hunger",20)));
+            food=Math.max(0,Math.min(99,prefs.getInt("food",8)));
+            String plants=prefs.getString("vegetation","");
+            if(plants.length()==576)for(int z=0;z<24;z++)for(int x=0;x<24;x++){char p=plants.charAt(z*24+x);if(p>='0'&&p<='3')vegetation[z][x]=p-'0';}
+        }
         void resetWorld(){resetRequested=true;prefs.edit().remove("terrain").remove("blocks").remove("terrain_v2").remove("blocks_v2").remove("blocks_v3").remove("player_x").remove("player_z").remove("health").remove("hunger").remove("food").remove("inventory_0").remove("inventory_1").remove("inventory_2").remove("inventory_3").remove("vegetation").remove("day_time").remove("world_seed").apply();}
         void saveWorld(){if(resetRequested)return;StringBuilder data=new StringBuilder(576),savedBlocks=new StringBuilder(24*24*64),plants=new StringBuilder(576);for(int z=0;z<24;z++)for(int x=0;x<24;x++){data.append((char)(33+Math.max(1,Math.min(63,map[z][x]))));for(int y=0;y<64;y++)savedBlocks.append((char)(33+Math.max(0,Math.min(63,blocks[z][x][y]))));plants.append((char)('0'+vegetation[z][x]));}SharedPreferences.Editor e=prefs.edit().putString("terrain_v2",data.toString()).putString("blocks_v3",savedBlocks.toString()).putString("vegetation",plants.toString()).putFloat("player_x",px).putFloat("player_z",pz).putInt("health",health).putInt("hunger",hunger).putInt("food",food).putFloat("day_time",dayTime);for(int i=0;i<4;i++)e.putInt("inventory_"+i,inventory[i]);e.apply();}
         void move(int x,int z,int jump){double a=Math.toRadians(yaw);float nx=(float)(x*Math.cos(a)-z*Math.sin(a))*movementSpeed;float nz=(float)(x*Math.sin(a)+z*Math.cos(a))*movementSpeed;float targetX=Math.max(1,Math.min(22,px+nx));float targetZ=Math.max(1,Math.min(22,pz+nz));int oldX=Math.max(0,Math.min(23,Math.round(px))),oldZ=Math.max(0,Math.min(23,Math.round(pz)));int newX=Math.max(0,Math.min(23,Math.round(targetX))),newZ=Math.max(0,Math.min(23,Math.round(targetZ)));if(Math.abs(map[newZ][newX]-map[oldZ][oldX])<=1&&vegetation[newZ][newX]==0){px=targetX;pz=targetZ;}if(jump!=0&&jumpOffset<=0.01f)jumpOffset=1.5f; }
