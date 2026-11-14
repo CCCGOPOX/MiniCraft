@@ -157,10 +157,10 @@ section{padding:27px 0}h2{font:400 17px/1.5 var(--pix);margin:0 0 18px}h3{margin
 <div class="account-actions"><button id="registerAccount" type="button" data-i="auth_register">Создать аккаунт</button><button id="loginAccount" type="button" class="secondary" data-i="auth_login">Войти</button></div>
 </div>
 <div id="profileArea" hidden>
-<div class="account-tabs"><button id="profileTab" type="button" data-i="profile_tab">Профиль</button><button id="customTab" type="button" data-i="custom_tab">Оформление</button><button id="inboxTab" type="button" hidden data-i="inbox_tab">Письма игроков</button></div>
+<div class="account-tabs"><button id="profileTab" type="button" data-i="profile_tab">Профиль</button><button id="customTab" type="button" data-i="custom_tab">Оформление</button><button id="messagesTab" type="button" data-i="messages_tab">Мои сообщения</button><button id="inboxTab" type="button" hidden data-i="inbox_tab">Письма игроков</button></div>
 <div id="profileView"><p id="profileIdentity" class="meta"></p><label for="profileNick" data-i="auth_nick">Игровой ник</label><input id="profileNick" maxlength="20"><label for="profileBio" data-i="profile_bio">О себе</label><textarea id="profileBio" maxlength="300"></textarea><div class="account-actions"><button id="saveProfile" type="button" data-i="profile_save">Сохранить профиль</button><button id="logoutAccount" type="button" class="secondary" data-i="auth_logout">Выйти</button></div></div>
 <div id="customView" hidden><div class="custom-row"><label data-i="custom_theme">Тема<select id="siteTheme"><option value="system">Системная</option><option value="light">Светлая</option><option value="dark">Тёмная</option></select></label><label data-i="custom_accent">Цвет акцента<input id="siteAccent" type="color" value="#4e9a2f"></label><label data-i="custom_font">Шрифт<select id="siteFont"><option value="Inter,system-ui,sans-serif">Inter</option><option value="Arial,sans-serif">Arial</option><option value="Georgia,serif">Georgia</option><option value="system-ui,sans-serif">Системный</option></select></label><label data-i="custom_size">Размер текста<select id="siteSize"><option value="15px">Маленький</option><option value="16px">Обычный</option><option value="18px">Большой</option><option value="20px">Очень большой</option></select></label></div><div class="account-actions"><button id="saveAppearance" type="button" data-i="custom_save">Сохранить оформление</button><button id="resetAppearance" type="button" class="secondary" data-i="custom_reset">Сбросить</button></div></div>
-<div id="inboxView" hidden><div id="inboxList"></div></div>
+<div id="messagesView" hidden><div id="myMessagesList"></div></div><div id="inboxView" hidden><div id="inboxList"></div></div>
 </div>
 <p class="account-status" id="accountStatus" aria-live="polite">Для онлайн-аккаунтов настрой Supabase в supabase-config.js.</p>
 </div></div>
@@ -170,7 +170,7 @@ section{padding:27px 0}h2{font:400 17px/1.5 var(--pix);margin:0 0 18px}h3{margin
 <script src="supabase-config.js"></script>
 <script>
 var T={
-ru:{contact_title:"Связаться с разработчиком",contact_desc:"Есть вопрос или предложение? Напиши разработчику. Ответ появится в твоём аккаунте.",contact_subject:"Тема",contact_message:"Сообщение",contact_send:"Отправить сообщение",account_title:"Аккаунт MiniCraft",account_button:"Аккаунт",auth_password:"Пароль",auth_nick:"Игровой ник",auth_register:"Создать аккаунт",auth_login:"Войти",profile_tab:"Профиль",custom_tab:"Оформление",inbox_tab:"Письма игроков",profile_bio:"О себе",profile_save:"Сохранить профиль",auth_logout:"Выйти",custom_theme:"Тема",custom_accent:"Цвет акцента",custom_font:"Шрифт",custom_size:"Размер текста",custom_save:"Сохранить оформление",custom_reset:"Сбросить",
+ru:{contact_title:"Связаться с разработчиком",contact_desc:"Есть вопрос или предложение? Напиши разработчику. Ответ появится в твоём аккаунте.",contact_subject:"Тема",contact_message:"Сообщение",contact_send:"Отправить сообщение",account_title:"Аккаунт MiniCraft",account_button:"Аккаунт",auth_password:"Пароль",auth_nick:"Игровой ник",auth_register:"Создать аккаунт",auth_login:"Войти",profile_tab:"Профиль",custom_tab:"Оформление",inbox_tab:"Письма игроков",messages_tab:"Мои сообщения",profile_bio:"О себе",profile_save:"Сохранить профиль",auth_logout:"Выйти",custom_theme:"Тема",custom_accent:"Цвет акцента",custom_font:"Шрифт",custom_size:"Размер текста",custom_save:"Сохранить оформление",custom_reset:"Сбросить",
 title:"MiniCraft — игра про блоки на Java",lead:"3D-игра про блоки на чистом Java: добывайте ресурсы, стройте, летите в Нижний мир и играйте с друзьями по сети. Один файл, никаких библиотек.",dl:"Скачать для Windows (.exe)",meta:"Windows: 1.7.0 · Android: APK",update_note:"Windows: MiniCraft 1.7.0. Android: APK скачивается напрямую.",
 nav_about:"Об игре",nav_news:"Обновления",nav_screens:"Скриншоты",nav_servers:"Сетевая игра",nav_skins:"Скины",
 stat_version:"Последняя версия",stat_downloads:"Нажатий на скачивание на этом устройстве",stat_java:"Требуется для запуска",
@@ -181,7 +181,7 @@ h_skins:"Скины",skin1:"-",skin2:"Твой персонаж",skin3:"Друг
 h_run:"Как запустить",r1:"Установите Java  8 и выше.",r2:"Скачайте игру кнопкой вверху страницы.",r3:"Запустите скачанный EXE-файл.",faq1q:"Какая Java нужна?",faq1a:"Для запуска требуется Java 8 или новее.",faq2q:"Как играть с другом?",faq2a:"Откройте мир для сети и передайте другу IP-адрес и порт подключения.",faq3q:"Где поменять скин?",faq3a:"В игре можно использовать собственный скин в формате PNG.",faq4q:"Игра связана с Minecraft?",faq4a:"MiniCraft — независимый проект, не связанный с Mojang или Microsoft.",
 h_keys:"Управление",k_key:"Клавиша",k_act:"Действие",kw:"Ходьба, Shift — бег",ks:"Прыжок, плавание",km:"Ломать и бить / ставить, открывать, есть",ke:"Инвентарь и крафт",k1:"Ячейки панели",kq:"Выбросить предмет",kj:"Достижения",kmap:"Мини-карта",kf:"Полный экран / скриншот",foot:"MiniCraft — независимая игра, написанная на Java с использованием только стандартного JDK. Не связана с Mojang и Microsoft."
 },
-en:{contact_title:"Contact the developer",contact_desc:"Have a question or suggestion? Send the developer a message. Replies will appear in your account.",contact_subject:"Subject",contact_message:"Message",contact_send:"Send message",account_title:"MiniCraft account",account_button:"Account",auth_password:"Password",auth_nick:"Game nickname",auth_register:"Create account",auth_login:"Sign in",profile_tab:"Profile",custom_tab:"Appearance",inbox_tab:"Player mail",profile_bio:"About me",profile_save:"Save profile",auth_logout:"Sign out",custom_theme:"Theme",custom_accent:"Accent color",custom_font:"Font",custom_size:"Text size",custom_save:"Save appearance",custom_reset:"Reset",
+en:{contact_title:"Contact the developer",contact_desc:"Have a question or suggestion? Send the developer a message. Replies will appear in your account.",contact_subject:"Subject",contact_message:"Message",contact_send:"Send message",account_title:"MiniCraft account",account_button:"Account",auth_password:"Password",auth_nick:"Game nickname",auth_register:"Create account",auth_login:"Sign in",profile_tab:"Profile",custom_tab:"Appearance",inbox_tab:"Player mail",messages_tab:"My messages",profile_bio:"About me",profile_save:"Save profile",auth_logout:"Sign out",custom_theme:"Theme",custom_accent:"Accent color",custom_font:"Font",custom_size:"Text size",custom_save:"Save appearance",custom_reset:"Reset",
 title:"MiniCraft — a block game in Java",lead:"A 3D block game written in plain Java: gather resources, build, travel to the Nether and play with friends over the network. One file, no libraries.",dl:"Download for Windows (.exe)",meta:"Windows: 1.7.0 · Android: 0.3.0",update_note:"Windows: MiniCraft 1.7.0. Android: open the build page and download the MiniCraft-Android-debug artifact.",
 nav_about:"About",nav_news:"Updates",nav_screens:"Screenshots",nav_servers:"Multiplayer",nav_skins:"Skins",
 stat_version:"Latest version",stat_downloads:"Download clicks on this device",stat_java:"Required to run",
@@ -252,12 +252,14 @@ document.getElementById("downloadBtn").addEventListener("click",function(){
   if(!email||password.length<8){say("Укажи email и пароль не короче 8 символов.");return}
   say("Подключаемся...");
   let result;
+  try{
   if(mode==="register"){
    if(!/^[A-Za-z0-9_]{3,20}$/.test(username)){say("Ник: 3–20 символов, латиница, цифры или _.");return}
    result=await client.auth.signUp({email,password,options:{data:{username}}});
    if(!result.error&&result.data.user){say(result.data.session?"Аккаунт создан.":"Проверь почту и подтверди регистрацию.");if(result.data.session){currentUser=result.data.user;await loadProfile();showProfile(true)}}
   }else{result=await client.auth.signInWithPassword({email,password});if(!result.error){currentUser=result.data.user;await loadProfile();showProfile(true)}}
   if(result?.error)say(result.error.message);
+  }catch(error){say("Не удалось связаться с Supabase: "+(error?.message||"Failed to fetch")+". Проверь URL, публичный ключ, доступность проекта и интернет-соединение.");}
  }
  $("registerAccount").addEventListener("click",()=>auth("register"));
  $("loginAccount").addEventListener("click",()=>auth("login"));
@@ -269,9 +271,10 @@ document.getElementById("downloadBtn").addEventListener("click",function(){
   const {error}=await client.from("mc_profiles").update({username,bio}).eq("id",currentUser.id);
   say(error?"Ошибка сохранения: "+error.message:"Профиль сохранён.");
  });
- $("profileTab").addEventListener("click",()=>{ $("profileView").hidden=false;$("customView").hidden=true;$("inboxView").hidden=true });
- $("customTab").addEventListener("click",()=>{ $("profileView").hidden=true;$("customView").hidden=false;$("inboxView").hidden=true;loadAppearance(currentProfile?.settings||localAppearance) });
- $("inboxTab").addEventListener("click",async()=>{ $("profileView").hidden=true;$("customView").hidden=true;$("inboxView").hidden=false;await loadInbox() });
+ $("profileTab").addEventListener("click",()=>{ $("profileView").hidden=false;$("customView").hidden=true;$("messagesView").hidden=true;$("inboxView").hidden=true });
+ $("customTab").addEventListener("click",()=>{ $("profileView").hidden=true;$("customView").hidden=false;$("messagesView").hidden=true;$("inboxView").hidden=true;loadAppearance(currentProfile?.settings||localAppearance) });
+ $("messagesTab").addEventListener("click",async()=>{ $("profileView").hidden=true;$("customView").hidden=true;$("messagesView").hidden=false;$("inboxView").hidden=true;await loadMyMessages() });
+ $("inboxTab").addEventListener("click",async()=>{ $("profileView").hidden=true;$("customView").hidden=true;$("messagesView").hidden=true;$("inboxView").hidden=false;await loadInbox() });
  $("saveAppearance").addEventListener("click",async()=>{
   const v=readAppearance();applyAppearance(v);localStorage.setItem("mc-appearance",JSON.stringify(v));localAppearance=v;
   if(client&&currentUser){const {error}=await client.from("mc_profiles").update({settings:v}).eq("id",currentUser.id);if(error){say("Оформление сохранено только на этом устройстве: "+error.message);return}}
@@ -287,6 +290,24 @@ document.getElementById("downloadBtn").addEventListener("click",function(){
   if(error){contactSay("Не удалось отправить: "+error.message);return}
   $("contactSubject").value="";$("contactMessage").value="";contactSay("Сообщение отправлено. Ответ появится в твоём аккаунте.");
  });
+ async function loadMyMessages(){
+  const box=$("myMessagesList");box.textContent="Загружаем сообщения...";
+  if(!client||!currentUser){box.textContent="Войди в аккаунт, чтобы увидеть сообщения.";return}
+  try{
+   const {data,error}=await client.from("mc_messages").select("id,subject,body,reply,created_at,replied_at").eq("user_id",currentUser.id).order("created_at",{ascending:false});
+   if(error){box.textContent="Ошибка: "+error.message;return}
+   box.replaceChildren();
+   if(!data?.length){box.textContent="Ты пока не отправлял сообщений разработчику.";return}
+   data.forEach(m=>{
+    const article=document.createElement("article");article.className="mail-item";
+    const title=document.createElement("strong");title.textContent=m.subject||"Сообщение";
+    const sent=document.createElement("p");sent.textContent=m.body;
+    const date=document.createElement("small");date.textContent="Отправлено: "+new Date(m.created_at).toLocaleString();
+    const reply=document.createElement("p");reply.textContent=m.reply?"Ответ Qushmi: "+m.reply:"Ответа пока нет.";
+    article.append(title,date,sent,reply);box.append(article);
+   });
+  }catch(error){box.textContent="Не удалось загрузить сообщения: "+(error?.message||"ошибка сети")}
+ }
  async function loadInbox(){
   const box=$("inboxList");box.textContent="Загружаем письма...";
   if(!client||!currentProfile?.is_admin){box.textContent="Нет доступа.";return}
@@ -305,7 +326,7 @@ document.getElementById("downloadBtn").addEventListener("click",function(){
    article.append(h,date,p,reply,btn);box.append(article);
   });
  }
- if(client){refreshSession();client.auth.onAuthStateChange(()=>setTimeout(refreshSession,0))}
+ if(client){refreshSession().catch(e=>say("Ошибка подключения: "+(e?.message||"Failed to fetch")));client.auth.onAuthStateChange(()=>setTimeout(()=>refreshSession().catch(e=>say("Ошибка подключения: "+(e?.message||"Failed to fetch"))),0))}
  else{say("Supabase не настроен. Интерфейс готов, но онлайн-регистрация, письма и общий вход пока не активны.")}
 })();
 </script>
