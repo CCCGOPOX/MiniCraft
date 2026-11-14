@@ -1,21 +1,21 @@
 # MiniCraft — Android port
 
-This folder tracks the Android version separately from the desktop Java build.
+This branch contains the first native Android prototype and an automated APK build.
 
-## Source compatibility
+## Implemented in this prototype
 
-The desktop entry point `MiniCraft.java` extends Swing's `JPanel` and uses AWT graphics/input, Swing windows, and Java Sound. Those APIs are not available in a normal Android application. The desktop source therefore cannot be copied into an APK or launched inside a WebView.
+- Native Android Activity (no WebView).
+- OpenGL ES 2.0 rendering surface.
+- Procedurally generated small block terrain.
+- Basic on-screen movement, jump, break and place controls.
+- GitHub Actions workflow that builds a debug APK and uploads it as an artifact.
 
-## Porting plan
+## Not implemented yet
 
-1. Create a native Android application module and an Android `Activity`.
-2. Move the voxel world, chunk generation, collision, inventory, crafting, mobs, and save logic into platform-neutral Java classes.
-3. Replace the desktop renderer (`Graphics2D`, `BufferedImage`, pixel buffer) with an Android rendering surface.
-4. Replace keyboard/mouse input with touch controls: movement joystick, look drag, jump, break/place, and hotbar.
-5. Replace Java Sound with Android audio APIs and desktop file paths with app-private storage.
-6. Adapt networking and test multiplayer on real devices and different networks.
-7. Build and test a signed APK with GitHub Actions before enabling the download link on the website.
+This is not a complete port of the desktop game. The original `MiniCraft(6).java` uses Swing/AWT and a software voxel raycaster. The prototype currently does not reuse that engine and does not yet include the original chunk system, inventory/crafting, survival/health, mobs, day/night, world persistence, audio, or multiplayer. Those systems need to be ported and tested separately.
 
-## Current status
+## Build
 
-The Android APK is not available yet. The website's Android button is intentionally marked as in development and does not point to a fake or empty APK. The existing desktop game remains unchanged.
+Pushes to `android-port` run `.github/workflows/android-apk.yml`. When the workflow succeeds, download the `MiniCraft-Android-debug` artifact from the Actions run. This debug APK is for testing, not a Play Store release.
+
+Do not enable the Android download button on the website until an APK has been built and tested on a real phone.
