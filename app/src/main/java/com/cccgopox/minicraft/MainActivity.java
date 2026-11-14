@@ -108,7 +108,7 @@ public class MainActivity extends Activity {
         settingsTitle.setGravity(Gravity.CENTER);
         panel.addView(settingsTitle,new LinearLayout.LayoutParams(-1,-2));
         SeekBar sensitivity = new SeekBar(this);
-        sensitivity.setMax(100); sensitivity.setProgress(35);
+        sensitivity.setMax(100); sensitivity.setProgress(world.sensitivityPercent());
         panel.addView(sensitivity,new LinearLayout.LayoutParams(280,-2));
         TextView sensitivityValue = new TextView(this);
         sensitivityValue.setText("35%");
@@ -161,6 +161,7 @@ public class MainActivity extends Activity {
         String status(){return renderer.status();}
         void saveWorld(){renderer.saveWorld();}
         void setSensitivity(float value){renderer.setSensitivity(value);}
+        int sensitivityPercent(){return renderer.sensitivityPercent();}
         private float lastX,lastY;
         @Override public boolean onTouchEvent(MotionEvent e) {
             if(e.getAction()==MotionEvent.ACTION_DOWN){lastX=e.getX();lastY=e.getY();return true;}
@@ -190,7 +191,8 @@ public class MainActivity extends Activity {
         private volatile float yaw=0;
         private volatile float pitch=18;
         private volatile float sensitivity=0.35f;
-        void setSensitivity(float value){sensitivity=Math.max(0.05f,Math.min(1.0f,value));}
+        void setSensitivity(float value){sensitivity=Math.max(0.05f,Math.min(1.0f,value));prefs.edit().putFloat("camera_sensitivity",sensitivity).apply();}
+        int sensitivityPercent(){return Math.max(0,Math.min(100,Math.round((sensitivity-0.10f)/0.90f*100f)));}
         private volatile float jumpOffset=0;
         private float dayTime=0;
         private volatile int health=20;
@@ -203,7 +205,7 @@ public class MainActivity extends Activity {
         private final int[] mobAttack=new int[3];
         private int mobFrame=0;
         void rotate(float dx,float dy){yaw+=dx;pitch=Math.max(-5,Math.min(55,pitch+dy));}
-        WorldRenderer(Context context){prefs=context.getSharedPreferences("minicraft_world",Context.MODE_PRIVATE);Random r=new Random(22);for(int z=0;z<24;z++)for(int x=0;x<24;x++){map[z][x]=Math.max(2,Math.min(6,(int)(2+Math.sin(x*.4)*1.4+Math.cos(z*.3)*1.2+r.nextDouble()*1.2)));for(int y=0;y<map[z][x];y++)blocks[z][x][y]=y==map[z][x]-1?1:(y>=map[z][x]-3?2:3);}loadWorld();}
+        WorldRenderer(Context context){prefs=context.getSharedPreferences("minicraft_world",Context.MODE_PRIVATE);sensitivity=Math.max(0.05f,Math.min(1.0f,prefs.getFloat("camera_sensitivity",0.415f)));Random r=new Random(22);for(int z=0;z<24;z++)for(int x=0;x<24;x++){map[z][x]=Math.max(2,Math.min(6,(int)(2+Math.sin(x*.4)*1.4+Math.cos(z*.3)*1.2+r.nextDouble()*1.2)));for(int y=0;y<map[z][x];y++)blocks[z][x][y]=y==map[z][x]-1?1:(y>=map[z][x]-3?2:3);}loadWorld();}
         void loadWorld(){for(int i=0;i<3;i++)inventory[i]=Math.max(0,Math.min(999,prefs.getInt("inventory_"+i,inventory[i])));String data=prefs.getString("terrain","");if(data.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=data.charAt(z*24+x);if(c>='1'&&c<='9')map[z][x]=c-'0';}}String saved=prefs.getString("blocks","");if(saved.length()==24*24*9){for(int z=0;z<24;z++)for(int x=0;x<24;x++)for(int y=0;y<9;y++){char c=saved.charAt((z*24+x)*9+y);if(c>='0'&&c<='3')blocks[z][x][y]=c-'0';}}else{String old=prefs.getString("block_types","");if(old.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=old.charAt(z*24+x);if(c>='0'&&c<='2'&&map[z][x]>0)blocks[z][x][map[z][x]-1]=c-'0'+1;}}}px=Math.max(1,Math.min(22,prefs.getFloat("player_x",12)));pz=Math.max(1,Math.min(22,prefs.getFloat("player_z",12)));health=Math.max(1,Math.min(20,prefs.getInt("health",20)));hunger=Math.max(0,Math.min(20,prefs.getInt("hunger",20)));food=Math.max(0,Math.min(99,prefs.getInt("food",8)));}
         void saveWorld(){StringBuilder data=new StringBuilder(576),savedBlocks=new StringBuilder(24*24*9);for(int z=0;z<24;z++)for(int x=0;x<24;x++){data.append((char)('0'+Math.max(1,Math.min(9,map[z][x]))));for(int y=0;y<9;y++)savedBlocks.append((char)('0'+Math.max(0,Math.min(3,blocks[z][x][y]))));}SharedPreferences.Editor e=prefs.edit().putString("terrain",data.toString()).putString("blocks",savedBlocks.toString()).putFloat("player_x",px).putFloat("player_z",pz).putInt("health",health).putInt("hunger",hunger).putInt("food",food);for(int i=0;i<3;i++)e.putInt("inventory_"+i,inventory[i]);e.apply();}
         void move(int x,int z,int jump){double a=Math.toRadians(yaw);float nx=(float)(x*Math.cos(a)-z*Math.sin(a));float nz=(float)(x*Math.sin(a)+z*Math.cos(a));float targetX=Math.max(1,Math.min(22,px+nx));float targetZ=Math.max(1,Math.min(22,pz+nz));int oldX=Math.max(0,Math.min(23,Math.round(px))),oldZ=Math.max(0,Math.min(23,Math.round(pz)));int newX=Math.max(0,Math.min(23,Math.round(targetX))),newZ=Math.max(0,Math.min(23,Math.round(targetZ)));if(Math.abs(map[newZ][newX]-map[oldZ][oldX])<=1){px=targetX;pz=targetZ;}if(jump!=0)jumpOffset=1.5f; }
@@ -212,7 +214,36 @@ public class MainActivity extends Activity {
         synchronized void craft(){if(inventory[1]>=4){inventory[1]-=4;inventory[2]=Math.min(999,inventory[2]+1);notice="Crafted 1 stone from 4 dirt";}else notice="Need 4 dirt to craft";}
         synchronized String status(){return "♥ "+health+"/20    Hunger "+hunger+"/20    Apples "+food+"\nMobs: 3"+(notice.length()>0?"\n"+notice:"");}
         synchronized int inventoryCount(int type){return type>=0&&type<3?inventory[type]:0;}
-         synchronized void edit(boolean place){double a=Math.toRadians(yaw);int x=Math.max(0,Math.min(23,Math.round(px+(float)Math.sin(a)*2.0f)));int z=Math.max(0,Math.min(23,Math.round(pz+(float)Math.cos(a)*2.0f)));if(place){if(inventory[selected]>0&&map[z][x]<9){blocks[z][x][map[z][x]]=selected+1;map[z][x]++;inventory[selected]--;}}else if(map[z][x]>1){map[z][x]--;int id=blocks[z][x][map[z][x]];if(id>=1&&id<=3)inventory[id-1]=Math.min(999,inventory[id-1]+1);blocks[z][x][map[z][x]]=0;}}
+         private int[] rayTarget(){
+            double a=Math.toRadians(yaw);
+            int lastX=-1,lastZ=-1;
+            for(float d=0.65f;d<=5.0f;d+=0.08f){
+                int x=Math.max(0,Math.min(23,Math.round(px+(float)Math.sin(a)*d)));
+                int z=Math.max(0,Math.min(23,Math.round(pz+(float)Math.cos(a)*d)));
+                if(x==lastX&&z==lastZ)continue;
+                lastX=x;lastZ=z;
+                if(map[z][x]>0)return new int[]{x,z};
+            }
+            return null;
+         }
+         synchronized void edit(boolean place){
+            int[] target=rayTarget();
+            if(target==null){notice="No block in reach";return;}
+            int x=target[0],z=target[1];
+            if(place){
+                if(inventory[selected]<=0){notice="Not enough blocks";return;}
+                if(map[z][x]>=9){notice="Block limit reached";return;}
+                blocks[z][x][map[z][x]]=selected+1;map[z][x]++;inventory[selected]--;
+                notice="Block placed";
+            }else{
+                if(map[z][x]<=1){notice="Cannot break the base";return;}
+                map[z][x]--;
+                int id=blocks[z][x][map[z][x]];
+                if(id>=1&&id<=3)inventory[id-1]=Math.min(999,inventory[id-1]+1);
+                blocks[z][x][map[z][x]]=0;
+                notice="Block mined";
+            }
+         }
         @Override public void onSurfaceCreated(javax.microedition.khronos.opengles.GL10 gl, javax.microedition.khronos.egl.EGLConfig c){GLES20.glClearColor(.48f,.72f,.94f,1);GLES20.glEnable(GLES20.GL_DEPTH_TEST);String vs="uniform mat4 uMVP; attribute vec3 aPos; void main(){gl_Position=uMVP*vec4(aPos,1.0);}";String fs="precision mediump float; uniform vec4 uColor; void main(){gl_FragColor=uColor;}";program=GLES20.glCreateProgram();int v=shader(GLES20.GL_VERTEX_SHADER,vs),f=shader(GLES20.GL_FRAGMENT_SHADER,fs);GLES20.glAttachShader(program,v);GLES20.glAttachShader(program,f);GLES20.glLinkProgram(program);int[] linkStatus=new int[1];GLES20.glGetProgramiv(program,GLES20.GL_LINK_STATUS,linkStatus,0);if(linkStatus[0]==0){String error=GLES20.glGetProgramInfoLog(program);GLES20.glDeleteProgram(program);throw new IllegalStateException("MiniCraft shader link failed: "+error);}GLES20.glDeleteShader(v);GLES20.glDeleteShader(f);pos=GLES20.glGetAttribLocation(program,"aPos");color=GLES20.glGetUniformLocation(program,"uColor");mvpLoc=GLES20.glGetUniformLocation(program,"uMVP");buffer=ByteBuffer.allocateDirect(108*4).order(ByteOrder.nativeOrder()).asFloatBuffer();}
         int shader(int type,String src){int s=GLES20.glCreateShader(type);GLES20.glShaderSource(s,src);GLES20.glCompileShader(s);int[] status=new int[1];GLES20.glGetShaderiv(s,GLES20.GL_COMPILE_STATUS,status,0);if(status[0]==0){String error=GLES20.glGetShaderInfoLog(s);GLES20.glDeleteShader(s);throw new IllegalStateException("MiniCraft shader compile failed: "+error);}return s;}
         @Override public void onSurfaceChanged(javax.microedition.khronos.opengles.GL10 gl,int w,int h){GLES20.glViewport(0,0,w,h);Matrix.perspectiveM(projection,0,55,(float)w/h,.1f,100f);}
