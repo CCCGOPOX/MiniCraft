@@ -78,16 +78,15 @@ public class MainActivity extends Activity {
         FrameLayout.LayoutParams hitParams = new FrameLayout.LayoutParams(112,76,Gravity.TOP|Gravity.RIGHT);
         hitParams.setMargins(0,dp(194),dp(18),0);root.addView(hit,hitParams);
         hit.setOnClickListener(v->{world.attack();playTone(ToneGenerator.TONE_PROP_NACK);refreshSurvivalHud();});
-        hotbarButtons = new Button[4];
-        String[] names = {"GRASS", "DIRT", "STONE", "WOOD"};
-        int[] leftMargins = {0, 0, 110, 330};
-        int[] rightMargins = {330, 110, 0, 0};
-        for (int i = 0; i < 4; i++) {
+        hotbarButtons = new Button[9];
+        String[] names = {"GRASS","DIRT","STONE","PLANKS","LEAVES","LOG","BEDROCK","SAND","SNOW"};
+        for (int i = 0; i < 9; i++) {
             final int type = i;
             Button slot = new Button(this);
             hotbarButtons[i] = slot;
-            FrameLayout.LayoutParams hp = new FrameLayout.LayoutParams(dp(110), dp(70), Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
-            hp.setMargins(dp(leftMargins[i]), 0, dp(rightMargins[i]), dp(125));
+            FrameLayout.LayoutParams hp = new FrameLayout.LayoutParams(dp(56), dp(58), Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+            int shift=(i-4)*58;
+            hp.setMargins(dp(Math.max(0,shift)),0,dp(Math.max(0,-shift)),dp(125));
             root.addView(slot, hp);
             slot.setOnClickListener(v -> { world.select(type); refreshHotbar(); });
         }
@@ -200,7 +199,7 @@ public class MainActivity extends Activity {
     private void refreshSurvivalHud(){if(survivalHud!=null&&world!=null)survivalHud.setText(world.status());}
     private void refreshHotbar() {
         if (hotbarButtons == null || world == null) return;
-        String[] names = {"GRASS", "DIRT", "STONE", "WOOD"};
+        String[] names = {"GRASS","DIRT","STONE","PLANKS","LEAVES","LOG","BEDROCK","SAND","SNOW"};
         for (int i = 0; i < hotbarButtons.length; i++) {
             hotbarButtons[i].setText((world.selectedType() == i ? "▶ " : "") + (i + 1) + " " + names[i] + "\n" + world.inventoryCount(i));
             hotbarButtons[i].setAlpha(world.selectedType() == i ? 1.0f : 0.72f);
@@ -286,7 +285,7 @@ public class MainActivity extends Activity {
         private final int[][] biome=new int[24][24];
         private final int[][] vegetation=new int[24][24];
         private final int[][][] blocks=new int[24][24][64];
-        private final int[] inventory={64,32,16,0};
+        private final int[] inventory={64,32,16,8,16,8,0,32,16};
         private long worldSeed=1;
         private final SharedPreferences prefs;
         private volatile float px=12,pz=12;
@@ -326,7 +325,7 @@ public class MainActivity extends Activity {
         void zoom(float amount){cameraDistance=Math.max(8,Math.min(28,cameraDistance+amount));prefs.edit().putFloat("camera_distance",cameraDistance).apply();}
         WorldRenderer(Context context){prefs=context.getSharedPreferences("minicraft_world",Context.MODE_PRIVATE);sensitivity=Math.max(0.05f,Math.min(1.0f,prefs.getFloat("camera_sensitivity",0.415f)));renderDistance=Math.max(8,Math.min(24,prefs.getInt("render_distance",12)));movementSpeed=Math.max(.08f,Math.min(.32f,prefs.getFloat("movement_speed",.16f)));soundEnabled=prefs.getBoolean("sound_enabled",true);cameraDistance=Math.max(8,Math.min(28,prefs.getFloat("camera_distance",18f)));dayTime=prefs.getFloat("day_time",0f);long seed=prefs.getLong("world_seed",System.currentTimeMillis());worldSeed=seed;prefs.edit().putLong("world_seed",seed).apply();for(int z=0;z<24;z++)for(int x=0;x<24;x++){int wx=x-12,wz=z-12;biome[z][x]=OriginalTerrain.biome(wx,wz,(int)seed);int h=OriginalTerrain.heightAt(wx,wz,(int)seed);boolean desert=biome[z][x]==1&&h>20;boolean sand=h<=24||desert;boolean snow=!sand&&(h>=44||(biome[z][x]==2&&h>24));map[z][x]=h;for(int y=0;y<=h;y++){int type;if(y==0)type=7;else if(y==h){type=sand?8:(snow?9:1);if(h<22&&OriginalTerrain.noiseAt(wx/7.0,wz/7.0,(int)seed*7+8)>.62)type=20;else if(h<22&&OriginalTerrain.noiseAt(wx/6.0,wz/6.0,(int)seed*7+11)>.66)type=14;}else if(y>=h-3)type=sand?8:2;else if(desert&&y>=h-7)type=29;else{type=3;int ore=OriginalTerrain.oreAt(wx,y,wz,(int)seed);if(ore!=0)type=ore;}if(OriginalTerrain.isCave(wx,y,wz,h,(int)seed))type=0;blocks[z][x][y]=type;}for(int y=h+1;y<=22&&y<64;y++)blocks[z][x][y]=10;if(OriginalTerrain.cactusAt(wx,wz,(int)seed))vegetation[z][x]=2;else if(OriginalTerrain.treeAt(wx,wz,(int)seed))vegetation[z][x]=biome[z][x]==2?3:1;}loadWorld();}
         void loadWorld(){
-            for(int i=0;i<4;i++)inventory[i]=Math.max(0,Math.min(999,prefs.getInt("inventory_"+i,inventory[i])));
+            for(int i=0;i<inventory.length;i++)inventory[i]=Math.max(0,Math.min(999,prefs.getInt("inventory_"+i,inventory[i])));
             String data=prefs.getString("terrain_v2","");
             if(data.length()==576){
                 for(int z=0;z<24;z++)for(int x=0;x<24;x++){int h=data.charAt(z*24+x)-33;if(h>=1&&h<64)map[z][x]=h;}
@@ -359,15 +358,15 @@ public class MainActivity extends Activity {
             String plants=prefs.getString("vegetation","");
             if(plants.length()==576)for(int z=0;z<24;z++)for(int x=0;x<24;x++){char p=plants.charAt(z*24+x);if(p>='0'&&p<='3')vegetation[z][x]=p-'0';}
         }
-        void resetWorld(){resetRequested=true;prefs.edit().remove("terrain").remove("blocks").remove("terrain_v2").remove("blocks_v2").remove("blocks_v3").remove("player_x").remove("player_z").remove("health").remove("hunger").remove("food").remove("inventory_0").remove("inventory_1").remove("inventory_2").remove("inventory_3").remove("vegetation").remove("day_time").remove("world_seed").apply();}
-        void saveWorld(){if(resetRequested)return;StringBuilder data=new StringBuilder(576),savedBlocks=new StringBuilder(24*24*64),plants=new StringBuilder(576);for(int z=0;z<24;z++)for(int x=0;x<24;x++){data.append((char)(33+Math.max(1,Math.min(63,map[z][x]))));for(int y=0;y<64;y++)savedBlocks.append((char)(33+Math.max(0,Math.min(63,blocks[z][x][y]))));plants.append((char)('0'+vegetation[z][x]));}SharedPreferences.Editor e=prefs.edit().putString("terrain_v2",data.toString()).putString("blocks_v3",savedBlocks.toString()).putString("vegetation",plants.toString()).putFloat("player_x",px).putFloat("player_z",pz).putInt("health",health).putInt("hunger",hunger).putInt("food",food).putFloat("day_time",dayTime);for(int i=0;i<4;i++)e.putInt("inventory_"+i,inventory[i]);e.apply();}
+        void resetWorld(){resetRequested=true;prefs.edit().remove("terrain").remove("blocks").remove("terrain_v2").remove("blocks_v2").remove("blocks_v3").remove("player_x").remove("player_z").remove("health").remove("hunger").remove("food").remove("inventory_0").remove("inventory_1").remove("inventory_2").remove("inventory_3").remove("inventory_4").remove("inventory_5").remove("inventory_6").remove("inventory_7").remove("inventory_8").remove("vegetation").remove("day_time").remove("world_seed").apply();}
+        void saveWorld(){if(resetRequested)return;StringBuilder data=new StringBuilder(576),savedBlocks=new StringBuilder(24*24*64),plants=new StringBuilder(576);for(int z=0;z<24;z++)for(int x=0;x<24;x++){data.append((char)(33+Math.max(1,Math.min(63,map[z][x]))));for(int y=0;y<64;y++)savedBlocks.append((char)(33+Math.max(0,Math.min(63,blocks[z][x][y]))));plants.append((char)('0'+vegetation[z][x]));}SharedPreferences.Editor e=prefs.edit().putString("terrain_v2",data.toString()).putString("blocks_v3",savedBlocks.toString()).putString("vegetation",plants.toString()).putFloat("player_x",px).putFloat("player_z",pz).putInt("health",health).putInt("hunger",hunger).putInt("food",food).putFloat("day_time",dayTime);for(int i=0;i<inventory.length;i++)e.putInt("inventory_"+i,inventory[i]);e.apply();}
         void move(int x,int z,int jump){double a=Math.toRadians(yaw);float nx=(float)(x*Math.cos(a)-z*Math.sin(a))*movementSpeed;float nz=(float)(x*Math.sin(a)+z*Math.cos(a))*movementSpeed;float targetX=Math.max(1,Math.min(22,px+nx));float targetZ=Math.max(1,Math.min(22,pz+nz));int oldX=Math.max(0,Math.min(23,Math.round(px))),oldZ=Math.max(0,Math.min(23,Math.round(pz)));int newX=Math.max(0,Math.min(23,Math.round(targetX))),newZ=Math.max(0,Math.min(23,Math.round(targetZ)));if(Math.abs(map[newZ][newX]-map[oldZ][oldX])<=1&&vegetation[newZ][newX]==0){px=targetX;pz=targetZ;}if(jump!=0&&jumpOffset<=0.01f)jumpOffset=1.5f; }
-        void select(int type){if(type>=0&&type<4)selected=type;}
+        void select(int type){if(type>=0&&type<inventory.length)selected=type;}
         synchronized void eat(){if(food>0&&(hunger<20||health<20)){food--;hunger=Math.min(20,hunger+5);health=Math.min(20,health+2);notice="Ate an apple (+5 hunger, +2 health)";}else notice=food==0?"No apples left":"Already full";}
         synchronized void craft(){if(inventory[1]>=4){inventory[1]-=4;inventory[2]=Math.min(999,inventory[2]+1);notice="Crafted 1 stone from 4 dirt";}else notice="Need 4 dirt to craft";}
         synchronized void attack(){int best=-1;float bestDistance=3.1f;double a=Math.toRadians(yaw);float fx=(float)Math.sin(a),fz=(float)Math.cos(a);for(int i=0;i<3;i++){if(mobHealth[i]<=0)continue;float dx=mobX[i]-px,dz=mobZ[i]-pz;float d=(float)Math.sqrt(dx*dx+dz*dz);if(d<bestDistance&&d>0.01f&&(dx/d*fx+dz/d*fz)>.25f){best=i;bestDistance=d;}}if(best<0){notice="No mob in front of you";return;}mobHealth[best]--;notice=mobHealth[best]<=0?"Mob defeated!":"Mob hit: "+mobHealth[best]+" HP left";}
         synchronized String status(){int x=Math.max(0,Math.min(23,Math.round(px))),z=Math.max(0,Math.min(23,Math.round(pz)));String area=biome[z][x]==1?"Desert":(biome[z][x]==2?"Snow": "Forest");String phase=Math.sin(dayTime)>0?"Day":"Night";int alive=0;for(int hp:mobHealth)if(hp>0)alive++;return "♥ "+health+"/20    Hunger "+hunger+"/20    Apples "+food+"\n"+area+"  •  "+phase+"  •  Mobs: "+alive+(notice.length()>0?"\n"+notice:"");}
-        synchronized int inventoryCount(int type){return type>=0&&type<4?inventory[type]:0;}
+        synchronized int inventoryCount(int type){return type>=0&&type<inventory.length?inventory[type]:0;}
          private int[] rayTarget(){
             double a=Math.toRadians(yaw);
             int lastX=Math.round(px),lastZ=Math.round(pz);
@@ -395,7 +394,7 @@ public class MainActivity extends Activity {
                 if(map[z][x]<=1){notice="Cannot break the base";return;}
                 map[z][x]--;
                 int id=blocks[z][x][map[z][x]];
-                if(id>=1&&id<=4)inventory[id-1]=Math.min(999,inventory[id-1]+1);
+                if(id>=1&&id<=9)inventory[id-1]=Math.min(999,inventory[id-1]+1);
                 blocks[z][x][map[z][x]]=0;
                 notice="Block mined";
             }
