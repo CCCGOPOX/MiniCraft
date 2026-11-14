@@ -1,6 +1,7 @@
 package com.cccgopox.minicraft;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -126,7 +127,7 @@ public class MainActivity extends Activity {
         panel.addView(play,new LinearLayout.LayoutParams(dp(280),dp(64)));
         Button newWorld = new Button(this); newWorld.setText("СОЗДАТЬ НОВЫЙ МИР");
         panel.addView(newWorld,new LinearLayout.LayoutParams(dp(280),dp(56)));
-        newWorld.setOnClickListener(v->{world.resetWorld();recreate();});
+        newWorld.setOnClickListener(v->new AlertDialog.Builder(this).setTitle("Создать новый мир?").setMessage("Текущий мир и инвентарь будут удалены.").setNegativeButton("ОТМЕНА",null).setPositiveButton("СОЗДАТЬ",(dialog,which)->{world.resetWorld();recreate();}).show());
         TextView settingsTitle = new TextView(this);
         settingsTitle.setText("ЧУВСТВИТЕЛЬНОСТЬ КАМЕРЫ");
         settingsTitle.setTextColor(0xffffffff);
