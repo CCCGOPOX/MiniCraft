@@ -13,6 +13,11 @@ public final class OriginalTerrain {
     public static double noiseAt(double x,double z,int seed){return noise(x,z,seed);}
     public static int biome(int x,int z,int seed){double t=noise(x/240.0+100,z/240.0-60,s1(seed)+77);return t>.62?1:t<.38?2:0;}
     public static int heightAt(int x,int z,int seed){return(int)(14+noise(x/90.0,z/90.0,s1(seed))*22+noise(x/26.0,z/26.0,s2(seed))*8+noise(x/8.0,z/8.0,s3(seed))*2);}
+    private static double hashValue(int x,int z,int seed){return hash2(x,z,seed);}
+    public static boolean treeAt(int x,int z,int seed){int bio=biome(x,z,seed);double chance=bio==1?0:(bio==2?.022:.012);if(hashValue(x,z,seed+991)>=chance)return false;int h=heightAt(x,z,seed);return h>24&&!(h>=44&&bio!=2)&&!isCave(x,h,z,h,seed);}
+    public static int treeHeight(int x,int z,int seed){return 4+(int)(hashValue(x,z,seed+17)*3);}
+    public static boolean cactusAt(int x,int z,int seed){int h=heightAt(x,z,seed);return biome(x,z,seed)==1&&hashValue(x,z,seed+313)<.007&&h>23&&!isCave(x,h,z,h,seed);}
+    public static int cactusHeight(int x,int z,int seed){return 1+(int)(hashValue(x,z,seed+77)*3);}
     public static int oreAt(int x,int y,int z,int seed){if(y<2)return 0;if(noise3(x*.16,y*.16,z*.16,s2(seed)+5)>.85)return 11;if(y<34&&noise3(x*.19+50,y*.19,z*.19,s3(seed)+9)>.88)return 12;if(y<18&&noise3(x*.22+90,y*.22,z*.22,s1(seed)+21)>.92)return 16;if(y<12&&noise3(x*.25+17,y*.25,z*.25+40,s1(seed)+31)>.94)return 17;return 0;}
     public static boolean isCave(int x,int y,int z,int h,int seed){if(y<3)return false;int top=h>SEA+3?h:h-4;if(y>top)return false;double a=noise3(x*.05,y*.08,z*.05,s1(seed)+11)-.5,b=noise3(x*.05+37.1,y*.08+11.3,z*.05+91.7,s1(seed)+13)-.5;if(a*a+b*b<.0013)return true;return y<30&&noise3(x*.028,y*.05,z*.028,s2(seed)+17)>.84;}
 }
