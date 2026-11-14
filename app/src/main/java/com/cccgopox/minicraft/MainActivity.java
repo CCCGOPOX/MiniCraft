@@ -42,7 +42,7 @@ public class MainActivity extends Activity {
         world = new WorldView(this);
         root.addView(world);
         TextView title = new TextView(this);
-        title.setText("MiniCraft  •  Android");
+        title.setText("MiniCraft 0.3.0  •  Android");
         title.setTextColor(0xffffffff); title.setTextSize(16); title.setPadding(18,12,18,12);
         FrameLayout.LayoutParams tp = new FrameLayout.LayoutParams(-2,-2,Gravity.TOP|Gravity.CENTER_HORIZONTAL);
         root.addView(title,tp);
