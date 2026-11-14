@@ -439,8 +439,8 @@ public class MainActivity extends Activity {
                 }
             }
             if(!paused&&++mobFrame%4==0){for(int i=0;i<3;i++){if(mobHealth[i]<=0){if(++mobRespawn[i]>=600){mobHealth[i]=3;mobX[i]=mobSpawnX[i];mobZ[i]=mobSpawnZ[i];mobRespawn[i]=0;}continue;}float dx=px-mobX[i],dz=pz-mobZ[i];float dist=(float)Math.sqrt(dx*dx+dz*dz);if(dist<10f&&dist>1.15f){float sx=dx/dist*.045f,sz=dz/dist*.045f;int cx=Math.max(0,Math.min(23,(int)mobX[i])),cz=Math.max(0,Math.min(23,(int)mobZ[i]));int nx=Math.max(0,Math.min(23,Math.round(mobX[i]+sx))),nz=Math.max(0,Math.min(23,Math.round(mobZ[i]+sz)));if(vegetation[nz][nx]==0&&Math.abs(map[nz][nx]-map[cz][cx])<=1){mobX[i]+=sx;mobZ[i]+=sz;}else{mobX[i]+=sz*.7f;mobZ[i]-=sx*.7f;}}else if(dist>=10f){mobX[i]+=(float)Math.sin(mobFrame*.025f+i)*.018f;mobZ[i]+=(float)Math.cos(mobFrame*.021f+i)*.018f;}mobX[i]=Math.max(1,Math.min(22,mobX[i]));mobZ[i]=Math.max(1,Math.min(22,mobZ[i]));if(dist<1.25f){if(++mobAttack[i]>=23){health=Math.max(0,health-1);mobAttack[i]=0;notice="A mob hit you!";if(health==0){health=20;hunger=16;px=12;pz=12;notice="You respawned";}}}else mobAttack[i]=0;}}
-            for(int i=0;i<3;i++){if(mobHealth[i]<=0)continue;int mx=Math.max(0,Math.min(23,(int)mobX[i])),mz=Math.max(0,Math.min(23,(int)mobZ[i]));Matrix.setIdentityM(model,0);Matrix.translateM(model,0,mobX[i],map[mz][mx],mobZ[i]);Matrix.scaleM(model,0,.8f,.9f,.8f);Matrix.multiplyMM(mvp,0,vp,0,model,0);GLES20.glUniformMatrix4fv(mvpLoc,1,false,mvp,0);GLES20.glUniform4f(color,.72f,.12f,.16f,1);drawCube();}
-            Matrix.setIdentityM(model,0);Matrix.translateM(model,0,px, map[Math.max(0,Math.min(23,(int)pz))][Math.max(0,Math.min(23,(int)px))]+jumpOffset,pz);Matrix.scaleM(model,0,.55f,1.2f,.55f);Matrix.multiplyMM(mvp,0,vp,0,model,0);GLES20.glUniformMatrix4fv(mvpLoc,1,false,mvp,0);GLES20.glUniform4f(color,.12f,.25f,.85f,1);drawCube();GLES20.glDisableVertexAttribArray(pos);
+            for(int i=0;i<3;i++){if(mobHealth[i]<=0)continue;int mx=Math.max(0,Math.min(23,(int)mobX[i])),mz=Math.max(0,Math.min(23,(int)mobZ[i]));float bx=mobX[i],by=map[mz][mx],bz=mobZ[i];drawPart(bx,by+.55f,bz,.62f,1.1f,.34f,.30f,.48f,.22f);drawPart(bx,by+1.28f,bz,.48f,.48f,.46f,.48f,.66f,.38f);drawPart(bx-.43f,by+.58f,bz,.22f,.92f,.24f,.25f,.42f,.20f);drawPart(bx+.43f,by+.58f,bz,.22f,.92f,.24f,.25f,.42f,.20f);drawPart(bx-.18f,by+.05f,bz,.24f,.62f,.28f,.20f,.22f,.34f);drawPart(bx+.18f,by+.05f,bz,.24f,.62f,.28f,.20f,.22f,.34f);}
+            float playerY=map[Math.max(0,Math.min(23,(int)pz))][Math.max(0,Math.min(23,(int)px))]+jumpOffset;drawPart(px,playerY+.62f,pz,.58f,1.18f,.34f,.12f,.25f,.82f);drawPart(px,playerY+1.42f,pz,.48f,.48f,.46f,.78f,.62f,.48f);drawPart(px-.40f,playerY+.64f,pz,.20f,.90f,.22f,.12f,.25f,.82f);drawPart(px+.40f,playerY+.64f,pz,.20f,.90f,.22f,.12f,.25f,.82f);drawPart(px-.16f,playerY+.04f,pz,.24f,.64f,.28f,.18f,.18f,.24f);drawPart(px+.16f,playerY+.04f,pz,.24f,.64f,.28f,.18f,.18f,.24f);GLES20.glDisableVertexAttribArray(pos);
         }
         private final float[] cubeTriangles={
                 -.5f,0,-.5f, .5f,0,-.5f, .5f,1,-.5f,  -.5f,0,-.5f, .5f,1,-.5f, -.5f,1,-.5f,
@@ -450,6 +450,16 @@ public class MainActivity extends Activity {
                 -.5f,1,-.5f, .5f,1,-.5f, .5f,1,.5f,  -.5f,1,-.5f, .5f,1,.5f, -.5f,1,.5f,
                 -.5f,0,.5f, .5f,0,.5f, .5f,0,-.5f,  -.5f,0,.5f, .5f,0,-.5f, -.5f,0,-.5f
             };
+        void drawPart(float x,float y,float z,float sx,float sy,float sz,float r,float g,float b){
+            Matrix.setIdentityM(model,0);
+            Matrix.translateM(model,0,x,y,z);
+            Matrix.scaleM(model,0,sx,sy,sz);
+            Matrix.multiplyMM(mvp,0,vp,0,model,0);
+            GLES20.glUniformMatrix4fv(mvpLoc,1,false,mvp,0);
+            GLES20.glUniform1f(blockLoc,1);
+            GLES20.glUniform4f(color,r,g,b,1);
+            drawCube();
+        }
         void drawCube(){
             buffer.clear();buffer.put(cubeTriangles).position(0);
             GLES20.glVertexAttribPointer(pos,3,GLES20.GL_FLOAT,false,0,buffer);
