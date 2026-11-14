@@ -55,6 +55,7 @@ public class MainActivity extends Activity {
         addButton(root,"▲",Gravity.BOTTOM|Gravity.LEFT,110,world,0);
         addButton(root,"◀",Gravity.BOTTOM|Gravity.LEFT,58,world,1);
         addButton(root,"▶",Gravity.BOTTOM|Gravity.LEFT,162,world,2);
+        addButton(root,"▼",Gravity.BOTTOM|Gravity.LEFT,0,world,5);
         addButton(root,"BREAK",Gravity.BOTTOM|Gravity.RIGHT,112,world,3);
         addButton(root,"PLACE",Gravity.BOTTOM|Gravity.RIGHT,0,world,4);
         Button eat = new Button(this); eat.setText("EAT");
@@ -160,14 +161,14 @@ public class MainActivity extends Activity {
             hotbarButtons[i].setAlpha(world.selectedType() == i ? 1.0f : 0.72f);
         }
     }
-    private void moveAction(WorldView w,int action){if(action==0)w.move(0,1,0);if(action==1)w.move(-1,0,0);if(action==2)w.move(1,0,0);}
+    private void moveAction(WorldView w,int action){if(action==0)w.move(0,1,0);if(action==1)w.move(-1,0,0);if(action==2)w.move(1,0,0);if(action==5)w.move(0,-1,0);}
     private void addButton(FrameLayout root,String label,int gravity,int offset,WorldView w,int action) {
         Button b=new Button(this); b.setText(label);
         FrameLayout.LayoutParams p=new FrameLayout.LayoutParams(104,88,gravity);
-        if ((gravity & Gravity.LEFT)==Gravity.LEFT) p.setMargins(18+((action==1)?0:(action==2?190:90)),0,0,24);
+        if ((gravity & Gravity.LEFT)==Gravity.LEFT) {if(action==0)p.setMargins(108,0,0,120);else if(action==5)p.setMargins(108,0,0,24);else p.setMargins(18+((action==1)?0:(action==2?190:90)),0,0,24);}
         else p.setMargins(0,0,18+offset,24);
         root.addView(b,p);
-        if(action<=2){
+        if(action<=2||action==5){
             final boolean[] held={false};
             Runnable repeat=new Runnable(){public void run(){if(!held[0])return;moveAction(w,action);controlHandler.postDelayed(this,100);}};
             b.setOnTouchListener((v,e)->{
