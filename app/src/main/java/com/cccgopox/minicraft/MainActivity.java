@@ -2,6 +2,8 @@ package com.cccgopox.minicraft;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
@@ -48,14 +50,15 @@ public class MainActivity extends Activity {
         root.addView(b,p);
         b.setOnClickListener(v -> { if(action==0)w.move(0,-1,0); if(action==1)w.move(-1,0,0); if(action==2)w.move(1,0,0); if(action==3)w.edit(false); if(action==4)w.edit(true); });
     }
-    @Override protected void onPause(){super.onPause(); if(world!=null)world.onPause();}
+    @Override protected void onPause(){super.onPause(); if(world!=null){world.saveWorld();world.onPause();}}
     @Override protected void onResume(){super.onResume(); if(world!=null)world.onResume();}
 
     static class WorldView extends GLSurfaceView {
         final WorldRenderer renderer;
-        WorldView(Activity a){super(a);setEGLContextClientVersion(2);renderer=new WorldRenderer();setRenderer(renderer);setRenderMode(RENDERMODE_CONTINUOUSLY);}
+        WorldView(Activity a){super(a);setEGLContextClientVersion(2);renderer=new WorldRenderer(a);setRenderer(renderer);setRenderMode(RENDERMODE_CONTINUOUSLY);}
         void move(int x,int z,int jump){renderer.move(x,z,jump);}
         void edit(boolean place){renderer.edit(place);}
+        void saveWorld(){renderer.saveWorld();}
         private float lastX,lastY;
         @Override public boolean onTouchEvent(MotionEvent e) {
             if(e.getAction()==MotionEvent.ACTION_DOWN){lastX=e.getX();lastY=e.getY();return true;}
@@ -77,13 +80,16 @@ public class MainActivity extends Activity {
         };
         private FloatBuffer buffer;
         private final int[][] map=new int[24][24];
+        private final SharedPreferences prefs;
         private volatile float px=12,pz=12;
         private volatile int selected=1;
         private volatile float yaw=0;
         private volatile float pitch=18;
         private volatile float jumpOffset=0;
         void rotate(float dx,float dy){yaw+=dx;pitch=Math.max(-5,Math.min(55,pitch+dy));}
-        WorldRenderer(){Random r=new Random(22);for(int z=0;z<24;z++)for(int x=0;x<24;x++)map[z][x]= (int)(2+Math.sin(x*.4)*1.4+Math.cos(z*.3)*1.2+r.nextDouble()*1.2);}
+        WorldRenderer(Context context){prefs=context.getSharedPreferences("minicraft_world",Context.MODE_PRIVATE);Random r=new Random(22);for(int z=0;z<24;z++)for(int x=0;x<24;x++)map[z][x]=(int)(2+Math.sin(x*.4)*1.4+Math.cos(z*.3)*1.2+r.nextDouble()*1.2);loadWorld();}
+        void loadWorld(){String data=prefs.getString("terrain","");if(data.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=data.charAt(z*24+x);if(c>='1'&&c<='9')map[z][x]=c-'0';}}px=Math.max(1,Math.min(22,prefs.getFloat("player_x",12)));pz=Math.max(1,Math.min(22,prefs.getFloat("player_z",12)));}
+        void saveWorld(){StringBuilder data=new StringBuilder(576);for(int z=0;z<24;z++)for(int x=0;x<24;x++)data.append((char)('0'+Math.max(1,Math.min(9,map[z][x]))));prefs.edit().putString("terrain",data.toString()).putFloat("player_x",px).putFloat("player_z",pz).apply();}
         void move(int x,int z,int jump){double a=Math.toRadians(yaw);float nx=(float)(x*Math.cos(a)-z*Math.sin(a));float nz=(float)(x*Math.sin(a)+z*Math.cos(a));px=Math.max(1,Math.min(22,px+nx));pz=Math.max(1,Math.min(22,pz+nz));if(jump!=0)jumpOffset=1.5f; }
         void edit(boolean place){int x=Math.max(0,Math.min(23,Math.round(px))),z=Math.max(0,Math.min(23,Math.round(pz)));if(place)map[z][x]++;else if(map[z][x]>1)map[z][x]--;}
         @Override public void onSurfaceCreated(javax.microedition.khronos.opengles.GL10 gl, javax.microedition.khronos.egl.EGLConfig c){GLES20.glClearColor(.48f,.72f,.94f,1);GLES20.glEnable(GLES20.GL_DEPTH_TEST);String vs="uniform mat4 uMVP; attribute vec3 aPos; void main(){gl_Position=uMVP*vec4(aPos,1.0);}";String fs="precision mediump float; uniform vec4 uColor; void main(){gl_FragColor=uColor;}";program=GLES20.glCreateProgram();int v=shader(GLES20.GL_VERTEX_SHADER,vs),f=shader(GLES20.GL_FRAGMENT_SHADER,fs);GLES20.glAttachShader(program,v);GLES20.glAttachShader(program,f);GLES20.glLinkProgram(program);pos=GLES20.glGetAttribLocation(program,"aPos");color=GLES20.glGetUniformLocation(program,"uColor");mvpLoc=GLES20.glGetUniformLocation(program,"uMVP");buffer=ByteBuffer.allocateDirect(108*4).order(ByteOrder.nativeOrder()).asFloatBuffer();}
