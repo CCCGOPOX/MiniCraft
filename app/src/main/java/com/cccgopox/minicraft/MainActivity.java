@@ -66,15 +66,15 @@ public class MainActivity extends Activity {
         FrameLayout.LayoutParams craftParams = new FrameLayout.LayoutParams(112,76,Gravity.TOP|Gravity.RIGHT);
         craftParams.setMargins(0,0,18,108); root.addView(craft,craftParams);
         craft.setOnClickListener(v -> {world.craft();refreshHotbar();refreshSurvivalHud();});
-        hotbarButtons = new Button[3];
-        String[] names = {"GRASS", "DIRT", "STONE"};
-        int[] leftMargins = {0, 0, 145};
-        int[] rightMargins = {145, 0, 0};
-        for (int i = 0; i < 3; i++) {
+        hotbarButtons = new Button[4];
+        String[] names = {"GRASS", "DIRT", "STONE", "WOOD"};
+        int[] leftMargins = {0, 0, 110, 330};
+        int[] rightMargins = {330, 110, 0, 0};
+        for (int i = 0; i < 4; i++) {
             final int type = i;
             Button slot = new Button(this);
             hotbarButtons[i] = slot;
-            FrameLayout.LayoutParams hp = new FrameLayout.LayoutParams(140, 70, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+            FrameLayout.LayoutParams hp = new FrameLayout.LayoutParams(110, 70, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
             hp.setMargins(leftMargins[i], 0, rightMargins[i], 125);
             root.addView(slot, hp);
             slot.setOnClickListener(v -> { world.select(type); refreshHotbar(); });
@@ -158,7 +158,7 @@ public class MainActivity extends Activity {
     private void refreshSurvivalHud(){if(survivalHud!=null&&world!=null)survivalHud.setText(world.status());}
     private void refreshHotbar() {
         if (hotbarButtons == null || world == null) return;
-        String[] names = {"GRASS", "DIRT", "STONE"};
+        String[] names = {"GRASS", "DIRT", "STONE", "WOOD"};
         for (int i = 0; i < hotbarButtons.length; i++) {
             hotbarButtons[i].setText((world.selectedType() == i ? "▶ " : "") + (i + 1) + " " + names[i] + "\n" + world.inventoryCount(i));
             hotbarButtons[i].setAlpha(world.selectedType() == i ? 1.0f : 0.72f);
@@ -230,7 +230,7 @@ public class MainActivity extends Activity {
         private final int[][] biome=new int[24][24];
         private final int[][] vegetation=new int[24][24];
         private final int[][][] blocks=new int[24][24][9];
-        private final int[] inventory={64,32,16};
+        private final int[] inventory={64,32,16,0};
         private final SharedPreferences prefs;
         private volatile float px=12,pz=12;
         private volatile int selected=0;
@@ -259,15 +259,15 @@ public class MainActivity extends Activity {
         void rotate(float dx,float dy){yaw+=dx;pitch=Math.max(-5,Math.min(55,pitch+dy));}
         void zoom(float amount){cameraDistance=Math.max(8,Math.min(28,cameraDistance+amount));prefs.edit().putFloat("camera_distance",cameraDistance).apply();}
         WorldRenderer(Context context){prefs=context.getSharedPreferences("minicraft_world",Context.MODE_PRIVATE);sensitivity=Math.max(0.05f,Math.min(1.0f,prefs.getFloat("camera_sensitivity",0.415f)));renderDistance=Math.max(8,Math.min(24,prefs.getInt("render_distance",12)));cameraDistance=Math.max(8,Math.min(28,prefs.getFloat("camera_distance",18f)));dayTime=prefs.getFloat("day_time",0f);long seed=prefs.getLong("world_seed",System.currentTimeMillis());prefs.edit().putLong("world_seed",seed).apply();Random r=new Random(seed);for(int z=0;z<24;z++)for(int x=0;x<24;x++){float climate=(float)(Math.sin(x*.19)+Math.cos(z*.16)+Math.sin((x+z)*.11));biome[z][x]=climate>1.0f?1:(climate<-.8f?2:0);map[z][x]=Math.max(2,Math.min(6,(int)(2+Math.sin(x*.4)*1.4+Math.cos(z*.3)*1.2+r.nextDouble()*1.2)));for(int y=0;y<map[z][x];y++)blocks[z][x][y]=y==map[z][x]-1?1:(y>=map[z][x]-3?2:3);if((x-12)*(x-12)+(z-12)*(z-12)>12){if(biome[z][x]==0&&r.nextFloat()<.075f)vegetation[z][x]=1;else if(biome[z][x]==1&&r.nextFloat()<.025f)vegetation[z][x]=2;else if(biome[z][x]==2&&r.nextFloat()<.055f)vegetation[z][x]=3;}}loadWorld();}
-        void loadWorld(){for(int i=0;i<3;i++)inventory[i]=Math.max(0,Math.min(999,prefs.getInt("inventory_"+i,inventory[i])));String data=prefs.getString("terrain","");if(data.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=data.charAt(z*24+x);if(c>='1'&&c<='9')map[z][x]=c-'0';}}String saved=prefs.getString("blocks","");if(saved.length()==24*24*9){for(int z=0;z<24;z++)for(int x=0;x<24;x++)for(int y=0;y<9;y++){char c=saved.charAt((z*24+x)*9+y);if(c>='0'&&c<='3')blocks[z][x][y]=c-'0';}}else{String old=prefs.getString("block_types","");if(old.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=old.charAt(z*24+x);if(c>='0'&&c<='2'&&map[z][x]>0)blocks[z][x][map[z][x]-1]=c-'0'+1;}}}px=Math.max(1,Math.min(22,prefs.getFloat("player_x",12)));pz=Math.max(1,Math.min(22,prefs.getFloat("player_z",12)));health=Math.max(1,Math.min(20,prefs.getInt("health",20)));hunger=Math.max(0,Math.min(20,prefs.getInt("hunger",20)));food=Math.max(0,Math.min(99,prefs.getInt("food",8)));}
-        void resetWorld(){resetRequested=true;prefs.edit().remove("terrain").remove("blocks").remove("player_x").remove("player_z").remove("health").remove("hunger").remove("food").remove("inventory_0").remove("inventory_1").remove("inventory_2").remove("day_time").remove("world_seed").apply();}
-        void saveWorld(){if(resetRequested)return;StringBuilder data=new StringBuilder(576),savedBlocks=new StringBuilder(24*24*9);for(int z=0;z<24;z++)for(int x=0;x<24;x++){data.append((char)('0'+Math.max(1,Math.min(9,map[z][x]))));for(int y=0;y<9;y++)savedBlocks.append((char)('0'+Math.max(0,Math.min(3,blocks[z][x][y]))));}SharedPreferences.Editor e=prefs.edit().putString("terrain",data.toString()).putString("blocks",savedBlocks.toString()).putFloat("player_x",px).putFloat("player_z",pz).putInt("health",health).putInt("hunger",hunger).putInt("food",food).putFloat("day_time",dayTime);for(int i=0;i<3;i++)e.putInt("inventory_"+i,inventory[i]);e.apply();}
+        void loadWorld(){for(int i=0;i<4;i++)inventory[i]=Math.max(0,Math.min(999,prefs.getInt("inventory_"+i,inventory[i])));String data=prefs.getString("terrain","");if(data.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=data.charAt(z*24+x);if(c>='1'&&c<='9')map[z][x]=c-'0';}}String saved=prefs.getString("blocks","");if(saved.length()==24*24*9){for(int z=0;z<24;z++)for(int x=0;x<24;x++)for(int y=0;y<9;y++){char c=saved.charAt((z*24+x)*9+y);if(c>='0'&&c<='4')blocks[z][x][y]=c-'0';}}else{String old=prefs.getString("block_types","");if(old.length()==576){for(int z=0;z<24;z++)for(int x=0;x<24;x++){char c=old.charAt(z*24+x);if(c>='0'&&c<='2'&&map[z][x]>0)blocks[z][x][map[z][x]-1]=c-'0'+1;}}}px=Math.max(1,Math.min(22,prefs.getFloat("player_x",12)));pz=Math.max(1,Math.min(22,prefs.getFloat("player_z",12)));health=Math.max(1,Math.min(20,prefs.getInt("health",20)));hunger=Math.max(0,Math.min(20,prefs.getInt("hunger",20)));food=Math.max(0,Math.min(99,prefs.getInt("food",8)));String plants=prefs.getString("vegetation","");if(plants.length()==576)for(int z=0;z<24;z++)for(int x=0;x<24;x++){char p=plants.charAt(z*24+x);if(p>='0'&&p<='3')vegetation[z][x]=p-'0';}}
+        void resetWorld(){resetRequested=true;prefs.edit().remove("terrain").remove("blocks").remove("player_x").remove("player_z").remove("health").remove("hunger").remove("food").remove("inventory_0").remove("inventory_1").remove("inventory_2").remove("inventory_3").remove("vegetation").remove("day_time").remove("world_seed").apply();}
+        void saveWorld(){if(resetRequested)return;StringBuilder data=new StringBuilder(576),savedBlocks=new StringBuilder(24*24*9),plants=new StringBuilder(576);for(int z=0;z<24;z++)for(int x=0;x<24;x++){data.append((char)('0'+Math.max(1,Math.min(9,map[z][x]))));for(int y=0;y<9;y++)savedBlocks.append((char)('0'+Math.max(0,Math.min(4,blocks[z][x][y]))));plants.append((char)('0'+vegetation[z][x]));}SharedPreferences.Editor e=prefs.edit().putString("terrain",data.toString()).putString("blocks",savedBlocks.toString()).putString("vegetation",plants.toString()).putFloat("player_x",px).putFloat("player_z",pz).putInt("health",health).putInt("hunger",hunger).putInt("food",food).putFloat("day_time",dayTime);for(int i=0;i<4;i++)e.putInt("inventory_"+i,inventory[i]);e.apply();}
         void move(int x,int z,int jump){double a=Math.toRadians(yaw);float nx=(float)(x*Math.cos(a)-z*Math.sin(a))*.16f;float nz=(float)(x*Math.sin(a)+z*Math.cos(a))*.16f;float targetX=Math.max(1,Math.min(22,px+nx));float targetZ=Math.max(1,Math.min(22,pz+nz));int oldX=Math.max(0,Math.min(23,Math.round(px))),oldZ=Math.max(0,Math.min(23,Math.round(pz)));int newX=Math.max(0,Math.min(23,Math.round(targetX))),newZ=Math.max(0,Math.min(23,Math.round(targetZ)));if(Math.abs(map[newZ][newX]-map[oldZ][oldX])<=1&&vegetation[newZ][newX]==0){px=targetX;pz=targetZ;}if(jump!=0)jumpOffset=1.5f; }
-        void select(int type){if(type>=0&&type<3)selected=type;}
+        void select(int type){if(type>=0&&type<4)selected=type;}
         synchronized void eat(){if(food>0&&hunger<20){food--;hunger=Math.min(20,hunger+5);notice="Ate an apple";}else notice=food==0?"No apples left":"Hunger is full";}
         synchronized void craft(){if(inventory[1]>=4){inventory[1]-=4;inventory[2]=Math.min(999,inventory[2]+1);notice="Crafted 1 stone from 4 dirt";}else notice="Need 4 dirt to craft";}
         synchronized String status(){int x=Math.max(0,Math.min(23,Math.round(px))),z=Math.max(0,Math.min(23,Math.round(pz)));String area=biome[z][x]==1?"Desert":(biome[z][x]==2?"Snow": "Forest");String phase=Math.sin(dayTime)>0?"Day":"Night";return "♥ "+health+"/20    Hunger "+hunger+"/20    Apples "+food+"\n"+area+"  •  "+phase+"  •  Mobs: 3"+(notice.length()>0?"\n"+notice:"");}
-        synchronized int inventoryCount(int type){return type>=0&&type<3?inventory[type]:0;}
+        synchronized int inventoryCount(int type){return type>=0&&type<4?inventory[type]:0;}
          private int[] rayTarget(){
             double a=Math.toRadians(yaw);
             int lastX=Math.round(px),lastZ=Math.round(pz);
@@ -276,7 +276,8 @@ public class MainActivity extends Activity {
                 int z=Math.max(0,Math.min(23,Math.round(pz+(float)Math.cos(a)*d)));
                 if(x==lastX&&z==lastZ)continue;
                 lastX=x;lastZ=z;
-                if(map[z][x]>0)return new int[]{x,z};
+                if(vegetation[z][x]>0)return new int[]{x,z,1};
+                if(map[z][x]>0)return new int[]{x,z,0};
             }
             return null;
          }
@@ -284,6 +285,7 @@ public class MainActivity extends Activity {
             int[] target=rayTarget();
             if(target==null){notice="No block in reach";return;}
             int x=target[0],z=target[1];
+            if(target[2]==1){if(place){notice="Cannot place on a tree";return;}vegetation[z][x]=0;inventory[3]=Math.min(999,inventory[3]+2);notice="Collected 2 wood";return;}
             if(place){
                 if(inventory[selected]<=0){notice="Not enough blocks";return;}
                 if(map[z][x]>=9){notice="Block limit reached";return;}
@@ -293,7 +295,7 @@ public class MainActivity extends Activity {
                 if(map[z][x]<=1){notice="Cannot break the base";return;}
                 map[z][x]--;
                 int id=blocks[z][x][map[z][x]];
-                if(id>=1&&id<=3)inventory[id-1]=Math.min(999,inventory[id-1]+1);
+                if(id>=1&&id<=4)inventory[id-1]=Math.min(999,inventory[id-1]+1);
                 blocks[z][x][map[z][x]]=0;
                 notice="Block mined";
             }
@@ -302,7 +304,7 @@ public class MainActivity extends Activity {
         int shader(int type,String src){int s=GLES20.glCreateShader(type);GLES20.glShaderSource(s,src);GLES20.glCompileShader(s);int[] status=new int[1];GLES20.glGetShaderiv(s,GLES20.GL_COMPILE_STATUS,status,0);if(status[0]==0){String error=GLES20.glGetShaderInfoLog(s);GLES20.glDeleteShader(s);throw new IllegalStateException("MiniCraft shader compile failed: "+error);}return s;}
         @Override public void onSurfaceChanged(javax.microedition.khronos.opengles.GL10 gl,int w,int h){GLES20.glViewport(0,0,w,h);Matrix.perspectiveM(projection,0,55,(float)w/h,.1f,100f);}
         @Override public void onDrawFrame(javax.microedition.khronos.opengles.GL10 gl){if(!paused){jumpOffset=Math.max(0,jumpOffset-0.035f);if(++survivalTicks>=3600){survivalTicks=0;if(hunger>0)hunger--;else if(--health<=0){health=20;hunger=16;px=12;pz=12;}}dayTime+=0.00045f;}float daylight=(float)(0.18+0.72*(0.5+0.5*Math.sin(dayTime)));GLES20.glClearColor(0.035f+0.42f*daylight,0.045f+0.62f*daylight,0.10f+0.78f*daylight,1);GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT|GLES20.GL_DEPTH_BUFFER_BIT);double angle=Math.toRadians(yaw);float eyeX=px-(float)Math.sin(angle)*cameraDistance;float eyeZ=pz-(float)Math.cos(angle)*cameraDistance;float eyeY=10+(pitch*.18f);Matrix.setLookAtM(view,0,eyeX,eyeY,eyeZ,px,1+jumpOffset*.15f,pz,0,1,0);Matrix.multiplyMM(vp,0,projection,0,view,0);GLES20.glUseProgram(program);GLES20.glEnableVertexAttribArray(pos);buffer.position(0);GLES20.glVertexAttribPointer(pos,3,GLES20.GL_FLOAT,false,0,buffer);
-            int tx=Math.max(0,Math.min(23,Math.round(px+(float)Math.sin(angle)*2.0f)));int tz=Math.max(0,Math.min(23,Math.round(pz+(float)Math.cos(angle)*2.0f)));for(int z=0;z<24;z++)for(int x=0;x<24;x++){if(Math.abs(x-px)>renderDistance||Math.abs(z-pz)>renderDistance)continue;for(int y=0;y<map[z][x];y++){int type=blocks[z][x][y];Matrix.setIdentityM(model,0);Matrix.translateM(model,0,x,y,z);Matrix.multiplyMM(mvp,0,vp,0,model,0);GLES20.glUniformMatrix4fv(mvpLoc,1,false,mvp,0);if(x==tx&&z==tz&&y==map[z][x]-1)GLES20.glUniform4f(color,1.0f,.82f,.18f,1);else if(type==1)GLES20.glUniform4f(color,.30f,.68f,.24f,1);else if(type==2)GLES20.glUniform4f(color,.48f,.29f,.13f,1);else if(y==map[z][x]-1&&biome[z][x]==1)GLES20.glUniform4f(color,.78f,.68f,.38f,1);else if(y==map[z][x]-1&&biome[z][x]==2)GLES20.glUniform4f(color,.88f,.92f,.98f,1);else GLES20.glUniform4f(color,.48f,.5f,.54f,1);drawCube();}}
+            int tx=Math.max(0,Math.min(23,Math.round(px+(float)Math.sin(angle)*2.0f)));int tz=Math.max(0,Math.min(23,Math.round(pz+(float)Math.cos(angle)*2.0f)));for(int z=0;z<24;z++)for(int x=0;x<24;x++){if(Math.abs(x-px)>renderDistance||Math.abs(z-pz)>renderDistance)continue;for(int y=0;y<map[z][x];y++){int type=blocks[z][x][y];Matrix.setIdentityM(model,0);Matrix.translateM(model,0,x,y,z);Matrix.multiplyMM(mvp,0,vp,0,model,0);GLES20.glUniformMatrix4fv(mvpLoc,1,false,mvp,0);if(x==tx&&z==tz&&y==map[z][x]-1)GLES20.glUniform4f(color,1.0f,.82f,.18f,1);else if(type==1)GLES20.glUniform4f(color,.30f,.68f,.24f,1);else if(type==2||type==4)GLES20.glUniform4f(color,.48f,.29f,.13f,1);else if(y==map[z][x]-1&&biome[z][x]==1)GLES20.glUniform4f(color,.78f,.68f,.38f,1);else if(y==map[z][x]-1&&biome[z][x]==2)GLES20.glUniform4f(color,.88f,.92f,.98f,1);else GLES20.glUniform4f(color,.48f,.5f,.54f,1);drawCube();}}
             for(int z=0;z<24;z++)for(int x=0;x<24;x++){
                 if(vegetation[z][x]==0||Math.abs(x-px)>renderDistance||Math.abs(z-pz)>renderDistance)continue;
                 float base=map[z][x];
